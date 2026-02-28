@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Update Item</h2>
+
+<form method="POST">
+
+    <label>Quantity</label>
+    <input type="number" name="quantity" value="{{ item.quantity }}" class="form-control" required>
+
+    <br>
+
+    <button class="btn btn-success">Update</button>
+
+</form>
+
+{% endblock %}

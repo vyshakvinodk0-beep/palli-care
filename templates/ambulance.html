@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+    <h2 class="text-center text-white mb-4">🚑 Ambulance Service</h2>
+
+    <div class="row">
+
+        {% for amb in ambulances %}
+        <div class="col-md-4 mb-4">
+            <div class="card dashboard-card p-3 text-center">
+
+                <h5>{{ amb.vehicle_no }}</h5>
+                <p>Driver: {{ amb.driver }}</p>
+                <p>📞 {{ amb.phone }}</p>
+
+                {% if amb.status == "Available" %}
+                    <span class="badge bg-success">Available</span>
+                {% else %}
+                    <span class="badge bg-danger">Busy</span>
+                {% endif %}
+
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

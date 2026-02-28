@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+    <h2 class="text-center fw-bold mb-4">
+        Nurse Availability
+    </h2>
+
+    <div class="card p-4 shadow">
+
+        <table class="table table-bordered text-center align-middle">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Nurse Name</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for n in nurses %}
+                <tr>
+
+                    <td>{{ n.nurse_name }}</td>
+
+                    <td>
+                        {% if n.status == "Available" %}
+                            <span class="badge bg-success">Available</span>
+
+                        {% elif n.status == "Busy" %}
+                            <span class="badge bg-danger">Busy</span>
+
+                        {% else %}
+                            <span class="badge bg-secondary">{{ n.status }}</span>
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

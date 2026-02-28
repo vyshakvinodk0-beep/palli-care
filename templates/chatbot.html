@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="chat-wrapper">
+
+    <div class="chat-card">
+
+        <!-- HEADER -->
+        <div class="chat-header">
+            🤖 Palliative AI Assistant
+        </div>
+
+        <!-- CHAT BODY -->
+        <div class="chat-body" id="chatBody">
+
+            <!-- USER MESSAGE -->
+            {% if user_msg %}
+            <div class="chat-message user">
+                <div class="bubble">{{ user_msg }}</div>
+            </div>
+            {% endif %}
+
+            <!-- BOT MESSAGE -->
+            {% if reply %}
+            <div class="chat-message bot">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png">
+                <div class="bubble">{{ reply|safe }}</div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- INPUT AREA -->
+        <form method="POST" class="chat-input-area">
+            <input type="text" name="msg" placeholder="Ask about care, fever, booking..." required>
+            <button type="submit">➤</button>
+        </form>
+
+    </div>
+
+</div>
+
+<!-- AUTO SCROLL -->
+<script>
+    const chatBody = document.getElementById("chatBody");
+    chatBody.scrollTo({
+        top: chatBody.scrollHeight,
+        behavior: "smooth"
+    });
+</script>
+
+<!-- ENTER TO SEND -->
+<script>
+    const input = document.querySelector("input[name='msg']");
+    input.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            this.form.submit();
+        }
+    });
+</script>
+
+{% endblock %}

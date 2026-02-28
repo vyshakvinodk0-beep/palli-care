@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="form-box">
+
+    <h2>Login</h2>
+
+    <!-- ✅ FLASH MESSAGE -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert 
+              {% if category == 'success' %}
+                  alert-success
+              {% else %}
+                  alert-danger
+              {% endif %}
+              text-center">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" autocomplete="off">
+
+        <!-- ✅ USERNAME -->
+        <input 
+            type="text"
+            name="username"
+            placeholder="Username"
+            required
+            autocomplete="off"
+        >
+
+        <!-- ✅ PASSWORD -->
+        <input 
+            type="password"
+            name="password"
+            placeholder="Password"
+            required
+            autocomplete="new-password"
+        >
+
+        <button class="btn">Login</button>
+
+    </form>
+
+    <!-- ✅ FORGOT PASSWORD LINK -->
+    <div style="margin-top:12px; text-align:center;">
+        <a href="/forgot_password" class="link">Forgot Password?</a>
+    </div>
+
+    <!-- ✅ SIGNUP REDIRECT -->
+    <div style="margin-top:8px; text-align:center;">
+        <span>Don't have an account?</span>
+        <a href="/signup" class="link">Signup</a>
+    </div>
+
+</div>
+
+{% endblock %}

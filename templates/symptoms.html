@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5 text-white">
+
+<h3>Patient Symptom Assessment</h3>
+
+<form method="POST">
+
+<input class="form-control mb-3" type="number" name="pain" placeholder="Pain Level (0–3)" required>
+<input class="form-control mb-3" type="number" name="fatigue" placeholder="Fatigue (0–3)" required>
+<input class="form-control mb-3" type="number" name="nausea" placeholder="Nausea (0–3)" required>
+<input class="form-control mb-3" type="number" name="depression" placeholder="Depression (0–3)" required>
+<input class="form-control mb-3" type="number" name="appetite" placeholder="Appetite Loss (0–3)" required>
+
+<button class="btn btn-info">Predict Care Level</button>
+
+</form>
+
+</div>
+
+{% endblock %}

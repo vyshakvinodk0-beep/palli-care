@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="text-center">Medical Equipment Availability</h2>
+
+<table class="table table-bordered mt-4">
+
+    <tr>
+        <th>Item</th>
+        <th>Quantity</th>
+        <th>Status</th>
+        {% if session.role == 'admin' %}
+        <th>Action</th>
+        {% endif %}
+    </tr>
+
+    {% for item in items %}
+    <tr>
+        <td>{{ item.item_name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.status }}</td>
+
+        {% if session.role == 'admin' %}
+        <td>
+            <a href="/update_item/{{ item.id }}" class="btn btn-warning btn-sm">
+                Update
+            </a>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}

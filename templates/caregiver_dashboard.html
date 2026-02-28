@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+    <h2 class="text-center fw-bold text-white mb-5">
+        Caregiver Dashboard
+    </h2>
+
+    <div class="row g-4">
+
+        <!-- AI Prediction -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">🤖</div>
+                <h5>AI Prediction</h5>
+                <a href="/symptoms" class="btn btn-info mt-3">Enter</a>
+            </div>
+        </div>
+
+        <!-- Booking -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">📅</div>
+                <h5>Book Service</h5>
+                <a href="/booking" class="btn btn-success mt-3">Book</a>
+            </div>
+        </div>
+
+        <!-- My Bookings -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">📋</div>
+                <h5>My Bookings</h5>
+                <a href="/view_bookings" class="btn btn-warning mt-3">View</a>
+            </div>
+        </div>
+
+        <!-- Ambulance -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">🚑</div>
+                <h5>Ambulance</h5>
+                <a href="/ambulance" class="btn btn-danger mt-3">View</a>
+            </div>
+        </div>
+
+        <!-- Nurse Availability -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">🧑‍⚕️</div>
+                <h5>Nurse Availability</h5>
+                <a href="/nurse_availability" class="btn btn-primary mt-3">Check</a>
+            </div>
+        </div>
+
+        <!-- Equipment Availability -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">🩺</div>
+                <h5>Equipment Availability</h5>
+                <a href="/medical_items" class="btn btn-success mt-3">Check</a>
+            </div>
+        </div>
+
+        <!-- AI Chatbot -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">💬</div>
+                <h5>AI Chatbot</h5>
+                <a href="/chatbot" class="btn btn-dark mt-3">Chat</a>
+            </div>
+        </div>
+
+        <!-- 🎬 Tutorials -->
+        <div class="col-md-3">
+            <div class="card dashboard-card text-center p-4">
+                <div class="icon">🎬</div>
+                <h5>Tutorials</h5>
+                <a href="/tutorials" class="btn btn-info mt-3">Watch</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="form-box">
+<h2>Create Account</h2>
+
+<form method="POST">
+<input name="username" placeholder="Username" required>
+<input type="password" name="password" placeholder="Password" required>
+
+<select name="role" required>
+<option value="">Select Role</option>
+<option value="caregiver">Caregiver</option>
+<option value="nurse">Nurse</option>
+</select>
+
+<button class="btn">Signup</button>
+</form>
+
+</div>
+
+{% endblock %}

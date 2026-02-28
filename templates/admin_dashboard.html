@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5 text-center text-white">
+
+<h2 class="mb-5">👑 Admin Dashboard</h2>
+
+<div class="row g-4">
+
+    <div class="col-md-6">
+        <div class="glass-card p-4">
+            <h5>Total Users</h5>
+            <h2>{{ users }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="glass-card p-4">
+            <h5>Total Bookings</h5>
+            <h2>{{ bookings }}</h2>
+        </div>
+    </div>
+
+</div>
+
+<a href="/view_all_bookings" class="btn btn-info mt-5">View All Bookings</a>
+
+</div>
+
+{% endblock %}
