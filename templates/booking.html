@@ -1,24 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container">
+<div class="container py-5">
 
-    <h2 class="text-center mb-4">Book Palliative Service</h2>
+    <h2 class="text-center text-white mb-4">Book Palliative Service</h2>
 
     <form method="POST" class="glass-card p-4 col-md-6 mx-auto">
 
-        <input type="text" name="patient" class="form-control mb-3"
-               placeholder="Patient Name" required>
+        <!-- Patient Name -->
+        <input type="text"
+               name="patient"
+               class="form-control mb-3"
+               placeholder="Patient Name"
+               required>
 
-        <select name="service" class="form-control mb-3" required>
+        <!-- Service Selection -->
+        <select name="service"
+                class="form-control mb-3"
+                required>
             <option value="">Select Service</option>
-            <option>Nursing Care</option>
-            <option>Doctor Visit</option>
-            <option>Physiotherapy</option>
-            <option>Medication Support</option>
+            <option value="Nursing Care">Nursing Care</option>
+            <option value="Doctor Visit">Doctor Visit</option>
+            <option value="Physiotherapy">Physiotherapy</option>
+            <option value="Medication Support">Medication Support</option>
         </select>
 
-        <button class="btn btn-success w-100">Confirm Booking</button>
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-success w-100">
+            Confirm Booking
+        </button>
 
     </form>
 

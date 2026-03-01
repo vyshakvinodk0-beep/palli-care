@@ -296,3 +296,219 @@ body{
     font-size: 35px;
     margin-bottom: 10px;
 }
+/* 🔥 BRAND LOGO */
+
+.brand-logo {
+    font-size: 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+/* ❤️ Animated Heart */
+.heart {
+    font-size: 24px;
+    background: linear-gradient(45deg, #00dbde, #fc00ff);
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: pulse 1.2s infinite;
+}
+
+/* ✨ Gradient AI Text */
+.brand-text {
+    background: linear-gradient(90deg, #00dbde, #00c6ff, #0072ff);
+    -webkit-background-clip: text;
+    color: transparent;
+    letter-spacing: 0.5px;
+}
+
+/* 💓 Heart animation */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+/* 🌟 Hover effect */
+.brand-logo:hover .brand-text {
+    filter: brightness(1.3);
+}
+/* 🌌 GLASS NAVBAR */
+.premium-navbar {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+    padding: 12px 0;
+    transition: 0.4s;
+}
+
+/* 🌟 LOGO */
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    font-size: 1.5rem;
+    text-decoration: none;
+}
+
+.brand-text {
+    background: linear-gradient(45deg, #00d4ff, #00ffa6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.heart {
+    color: #00d4ff;
+    font-size: 1.7rem;
+    animation: heartbeat 1.4s infinite;
+}
+
+/* 💓 HEART ANIMATION */
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* 🧭 NAV LINKS */
+.nav-link {
+    color: #fff !important;
+    margin: 0 10px;
+    position: relative;
+}
+
+.nav-link::after {
+    content: "";
+    width: 0%;
+    height: 2px;
+    background: #00d4ff;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transition: 0.3s;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+/* 👤 USER BADGE */
+.user-badge {
+    background: linear-gradient(45deg, #00d4ff, #00ffa6);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    margin-left: 15px;
+}
+
+/* 🔘 BUTTONS */
+.btn-login {
+    background: transparent;
+    border: 1px solid #00d4ff;
+    color: #00d4ff;
+    border-radius: 30px;
+    padding: 6px 18px;
+}
+
+.btn-login:hover {
+    background: #00d4ff;
+    color: #000;
+}
+
+.btn-signup {
+    background: linear-gradient(45deg, #00d4ff, #00ffa6);
+    border: none;
+    border-radius: 30px;
+    padding: 6px 18px;
+    color: #000;
+}
+
+.btn-logout {
+    background: linear-gradient(45deg, #ff4d4d, #ff0000);
+    border: none;
+    border-radius: 30px;
+    padding: 6px 18px;
+}
+
+/* 📱 MOBILE */
+@media(max-width: 991px){
+    .nav-link{
+        margin: 10px 0;
+    }
+}
+/* HERO */
+.hero {
+    padding: 120px 20px;
+    background: radial-gradient(circle at top, #00d9ff22, transparent);
+}
+
+.hero-title {
+    font-size: 60px;
+    font-weight: 700;
+    background: linear-gradient(90deg,#00f5ff,#00ffcc);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.hero-sub {
+    font-size: 20px;
+    opacity: 0.9;
+}
+
+/* GLOW BUTTON */
+.btn-glow {
+    background: linear-gradient(45deg,#00f5ff,#00ffcc);
+    border: none;
+    color: black;
+    padding: 12px 28px;
+    border-radius: 30px;
+    font-weight: 600;
+    box-shadow: 0 0 20px #00f5ff88;
+}
+
+/* GLASS CARD */
+.glass-card {
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    transition: 0.4s;
+}
+
+.glass-card:hover {
+    transform: translateY(-10px);
+}
+
+/* STATS */
+.stats-section {
+    margin-top: 60px;
+}
+
+.counter {
+    font-size: 40px;
+    color: #00f5ff;
+}
+
+/* STEPS */
+.step-card {
+    background: rgba(255,255,255,0.05);
+    padding: 25px;
+    border-radius: 15px;
+}
+
+/* CTA */
+.cta {
+    padding: 80px 20px;
+    background: linear-gradient(90deg,#00f5ff33,#00ffcc33);
+}
+
+/* SECTION TITLE */
+.section-title {
+    font-weight: 700;
+    color: #fff;
+}

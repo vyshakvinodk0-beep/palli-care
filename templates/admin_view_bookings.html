@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="text-center mb-4">All Bookings</h2>
+
+<table class="table table-dark text-center">
+
+<tr>
+    <th>Patient</th>
+    <th>Service</th>
+    <th>Caregiver</th>
+    <th>Action</th>
+</tr>
+
+{% for b in bookings %}
+<tr>
+    <td>{{ b.patient_name }}</td>
+    <td>{{ b.service }}</td>
+    <td>{{ b.caregiver }}</td>
+
+    <td>
+        <a href="/admin_delete_booking/{{ b.id }}"
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Delete booking?')">
+           Delete
+        </a>
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% endblock %}

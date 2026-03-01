@@ -1,10 +1,25 @@
 from flask import Flask, render_template, request, redirect, session, flash
+from datetime import timedelta
 import sqlite3
 import os
 import pickle
 
 app = Flask(__name__)
 app.secret_key = "palliative"
+
+# ✅ SESSION TIMEOUT (5 minutes)
+app.permanent_session_lifetime = timedelta(minutes=5)
+
+
+# ✅ DISABLE BACK BUTTON CACHE (VERY IMPORTANT FOR LOGOUT SECURITY)
+@app.after_request
+def add_header(response):
+    response.cache_control.no_store = True
+    response.cache_control.no_cache = True
+    response.cache_control.must_revalidate = True
+    response.cache_control.max_age = 0
+    return response
+
 
 # ---------------- LOAD ML MODELS ----------------
 symptom_model = pickle.load(open("model.pkl", "rb"))
@@ -54,14 +69,9 @@ def init_db():
 
     admin = conn.execute("SELECT * FROM users WHERE role='admin'").fetchone()
     if not admin:
-        conn.execute("INSERT INTO users(username,password,role) VALUES ('admin','admin','admin')")
-
-    items = conn.execute("SELECT * FROM medical_items").fetchall()
-    if not items:
-        conn.execute("INSERT INTO medical_items VALUES (NULL,'Oxygen Cylinder',5,'Available')")
-        conn.execute("INSERT INTO medical_items VALUES (NULL,'Wheelchair',2,'Limited')")
-        conn.execute("INSERT INTO medical_items VALUES (NULL,'Hospital Bed',1,'Limited')")
-        conn.execute("INSERT INTO medical_items VALUES (NULL,'Syringe Kit',0,'Out of Stock')")
+        conn.execute(
+            "INSERT INTO users(username,password,role) VALUES ('admin','admin','admin')"
+        )
 
     conn.commit()
     conn.close()
@@ -105,7 +115,9 @@ def login():
         password = request.form["password"]
 
         conn = get_db()
-        user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+        user = conn.execute(
+            "SELECT * FROM users WHERE username=?", (username,)
+        ).fetchone()
         conn.close()
 
         if not user:
@@ -117,6 +129,8 @@ def login():
             return redirect("/login")
 
         session.clear()
+        session.permanent = True
+
         session["user"] = user["username"]
         session["role"] = user["role"]
 
@@ -124,32 +138,6 @@ def login():
         return redirect(f"/{user['role']}_dashboard")
 
     return render_template("login.html")
-
-
-# ---------------- FORGOT PASSWORD ----------------
-@app.route("/forgot_password", methods=["GET", "POST"])
-def forgot_password():
-
-    if request.method == "POST":
-
-        username = request.form["username"]
-        new_password = request.form["password"]
-
-        conn = get_db()
-        user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
-
-        if not user:
-            flash("Username not found ❌", "danger")
-            return redirect("/forgot_password")
-
-        conn.execute("UPDATE users SET password=? WHERE username=?", (new_password, username))
-        conn.commit()
-        conn.close()
-
-        flash("Password updated successfully ✅ Please login", "success")
-        return redirect("/login")
-
-    return render_template("forgot_password.html")
 
 
 # ---------------- LOGOUT ----------------
@@ -199,46 +187,38 @@ def nurse_dashboard():
     return render_template("nurse_dashboard.html")
 
 
-# ---------------- TUTORIALS (NEW) ----------------
-@app.route("/tutorials")
-def tutorials():
+# ---------------- NURSE AVAILABILITY ----------------
+@app.route("/nurse_availability")
+def nurse_availability():
 
     if "user" not in session:
         return redirect("/login")
 
-    videos = [
-        {
-            "title": "How to use Oxygen Cylinder",
-            "link": "https://www.youtube.com/embed/AlWjFyvlDFw?si=0CahnA8HsxvOQrCk"
-        },
-        {
-            "title": "Hospital Bed Adjustment",
-            "link": "https://www.youtube.com/embed/uQH3SigM2bg?si=IGZrQRaMJ-6qh2ih"
-        },
-        {
-            "title": "Bedsore Prevention",
-            "link": "https://www.youtube.com/embed/_4bL-qIvSas?si=ZjuQuoToFLJsPgCI"
-        },
-        {
-            "title": "changing of urine pad",
-            "link": "https://www.youtube.com/embed/Z1i0dGq0M3g"
-        }
-    ]
+    conn = get_db()
+    nurses = conn.execute(
+        "SELECT username FROM users WHERE role='nurse'"
+    ).fetchall()
+    conn.close()
 
-    return render_template("tutorials.html", videos=videos)
+    return render_template("nurse_availability.html", nurses=nurses)
 
 
 # ---------------- BOOKING ----------------
 @app.route("/booking", methods=["GET", "POST"])
 def booking():
+
     if session.get("role") != "caregiver":
         return redirect("/login")
 
     if request.method == "POST":
+
+        patient = request.form["patient"]
+        service = request.form["service"]
+
         conn = get_db()
         conn.execute(
-            "INSERT INTO booking(patient_name, service, caregiver) VALUES (?,?,?)",
-            (request.form["patient"], request.form["service"], session["user"])
+            "INSERT INTO booking(patient_name, service, caregiver) VALUES (?, ?, ?)",
+            (patient, service, session["user"])
         )
         conn.commit()
         conn.close()
@@ -252,6 +232,7 @@ def booking():
 # ---------------- VIEW BOOKINGS ----------------
 @app.route("/view_bookings")
 def view_bookings():
+
     if session.get("role") != "caregiver":
         return redirect("/login")
 
@@ -265,9 +246,31 @@ def view_bookings():
     return render_template("view_bookings.html", bookings=data)
 
 
+# 🗑️ ---------------- DELETE BOOKING ----------------
+@app.route("/delete_booking/<int:id>")
+def delete_booking(id):
+
+    if session.get("role") != "caregiver":
+        return redirect("/login")
+
+    conn = get_db()
+
+    conn.execute("""
+        DELETE FROM booking
+        WHERE id=? AND caregiver=?
+    """, (id, session["user"]))
+
+    conn.commit()
+    conn.close()
+
+    flash("Booking deleted 🗑️", "success")
+    return redirect("/view_bookings")
+
+
 # ---------------- MEDICAL ITEMS ----------------
 @app.route("/medical_items")
 def medical_items():
+
     if "user" not in session:
         return redirect("/login")
 
@@ -278,44 +281,10 @@ def medical_items():
     return render_template("medical_items.html", items=items)
 
 
-# ---------------- UPDATE EQUIPMENT ----------------
-@app.route("/update_item/<int:id>", methods=["GET", "POST"])
-def update_item(id):
-
-    if session.get("role") != "admin":
-        return redirect("/login")
-
-    conn = get_db()
-
-    if request.method == "POST":
-
-        quantity = int(request.form["quantity"])
-
-        status = "Available"
-        if quantity == 0:
-            status = "Out of Stock"
-        elif quantity <= 2:
-            status = "Limited"
-
-        conn.execute(
-            "UPDATE medical_items SET quantity=?, status=? WHERE id=?",
-            (quantity, status, id)
-        )
-        conn.commit()
-        conn.close()
-
-        flash("Item updated ✅", "success")
-        return redirect("/medical_items")
-
-    item = conn.execute("SELECT * FROM medical_items WHERE id=?", (id,)).fetchone()
-    conn.close()
-
-    return render_template("update_item.html", item=item)
-
-
 # ---------------- AMBULANCE ----------------
 @app.route("/ambulance")
 def ambulance():
+
     if "user" not in session:
         return redirect("/login")
 
@@ -325,6 +294,23 @@ def ambulance():
     ]
 
     return render_template("ambulance.html", ambulances=ambulances)
+
+
+# ---------------- TUTORIALS ----------------
+@app.route("/tutorials")
+def tutorials():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    videos = [
+        {"title": "How to use Oxygen Cylinder", "link": "https://www.youtube.com/embed/AlWjFyvlDFw"},
+        {"title": "Hospital Bed Adjustment", "link": "https://www.youtube.com/embed/uQH3SigM2bg"},
+        {"title": "Bedsore Prevention", "link": "https://www.youtube.com/embed/_4bL-qIvSas"},
+        {"title": "Changing of urine pad", "link": "https://www.youtube.com/embed/Z1i0dGq0M3g"}
+    ]
+
+    return render_template("tutorials.html", videos=videos)
 
 
 # ---------------- AI SYMPTOMS ----------------

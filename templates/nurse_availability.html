@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container py-5">
+<div class="container py-5 text-white">
 
-    <h2 class="text-center fw-bold mb-4">
-        Nurse Availability
+    <h2 class="text-center fw-bold mb-5">
+        🧑‍⚕️ Nurse Availability
     </h2>
 
-    <div class="card p-4 shadow">
+    <div class="card shadow-lg p-4 bg-dark">
 
-        <table class="table table-bordered text-center align-middle">
+        <table class="table table-dark table-bordered text-center align-middle">
 
-            <thead class="table-dark">
+            <thead>
                 <tr>
                     <th>Nurse Name</th>
                     <th>Status</th>
@@ -20,25 +20,25 @@
 
             <tbody>
 
-                {% for n in nurses %}
-                <tr>
+                {% if nurses %}
+                    {% for nurse in nurses %}
+                    <tr>
+                        <td>{{ nurse.username }}</td>
 
-                    <td>{{ n.nurse_name }}</td>
-
-                    <td>
-                        {% if n.status == "Available" %}
-                            <span class="badge bg-success">Available</span>
-
-                        {% elif n.status == "Busy" %}
-                            <span class="badge bg-danger">Busy</span>
-
-                        {% else %}
-                            <span class="badge bg-secondary">{{ n.status }}</span>
-                        {% endif %}
-                    </td>
-
-                </tr>
-                {% endfor %}
+                        <td>
+                            <span class="badge bg-success px-3 py-2">
+                                Available
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="2" class="text-warning">
+                            No nurses registered yet
+                        </td>
+                    </tr>
+                {% endif %}
 
             </tbody>
 
