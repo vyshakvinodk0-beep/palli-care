@@ -1,17 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Update Item</h2>
+<div class="container py-5">
+    <div class="form-box shadow-lg" style="border-radius: 20px; width: 400px; background: white; padding: 40px;">
+        
+        <h2 class="fw-bold mb-4 text-center" style="color: #3b4d42;">Update Equipment</h2>
+        
+        <form action="/update_item/{{ item.id }}" method="POST">
+            
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold" style="color: #555;">Equipment Name</label>
+                <input type="text" class="form-control" value="{{ item.item_name }}" disabled style="background: #f8f9fa; border-radius: 10px;">
+            </div>
 
-<form method="POST">
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold" style="color: #555;">Current Quantity</label>
+                <input type="number" name="quantity" class="form-control" value="{{ item.quantity }}" required style="border-radius: 10px; padding: 12px;">
+            </div>
 
-    <label>Quantity</label>
-    <input type="number" name="quantity" value="{{ item.quantity }}" class="form-control" required>
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold" style="color: #555;">Status</label>
+                <select name="status" class="form-select" required style="border-radius: 10px; padding: 12px;">
+                    <option value="Available" {% if item.status == 'Available' %}selected{% endif %}>Available</option>
+                    <option value="Limited" {% if item.status == 'Limited' %}selected{% endif %}>Limited</option>
+                    <option value="Out of Stock" {% if item.status == 'Out of Stock' %}selected{% endif %}>Out of Stock</option>
+                </select>
+            </div>
 
-    <br>
+            <button type="submit" class="btn w-100" style="background: #7ca087; color: white; border-radius: 25px; padding: 14px; font-weight: bold; font-size: 16px; border: none; box-shadow: 0 4px 15px rgba(124, 160, 135, 0.4);">
+                SAVE CHANGES
+            </button>
 
-    <button class="btn btn-success">Update</button>
+            <div class="text-center mt-3">
+                <a href="/medical_items" class="link" style="color: #dcb37b; font-weight: 500; text-decoration: none;">Cancel and Back</a>
+            </div>
 
-</form>
+        </form>
+    </div>
+</div>
 
 {% endblock %}

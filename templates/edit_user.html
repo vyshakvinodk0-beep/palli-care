@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="form-box shadow-lg" style="border-radius: 20px; width: 400px; background: white; padding: 40px; margin: auto;">
+        
+        <h2 class="fw-bold mb-4 text-center" style="color: #3b4d42;">Edit User</h2>
+        
+        <form action="/edit_user/{{ user.id }}" method="POST">
+            
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold" style="color: #555;">Username</label>
+                <input type="text" name="username" class="form-control" value="{{ user.username }}" required style="border-radius: 10px; padding: 12px;">
+            </div>
+
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold" style="color: #555;">Role</label>
+                <select name="role" class="form-select" required style="border-radius: 10px; padding: 12px;">
+                    <option value="caregiver" {% if user.role == 'caregiver' %}selected{% endif %}>Caregiver</option>
+                    <option value="nurse" {% if user.role == 'nurse' %}selected{% endif %}>Nurse</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin (Careful!)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn w-100" style="background: #7ca087; color: white; border-radius: 25px; padding: 14px; font-weight: bold; font-size: 16px; border: none; box-shadow: 0 4px 15px rgba(124, 160, 135, 0.4);">
+                SAVE USER CHANGES
+            </button>
+
+            <div class="text-center mt-3">
+                <a href="/manage_users" class="link" style="color: #dcb37b; font-weight: 500; text-decoration: none;">Cancel and Back</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}

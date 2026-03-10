@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <a href="/nurse_dashboard" class="link me-3 fw-bold" style="color: #7ca087;">← Back to Dashboard</a>
+            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.2rem;">Patient: {{ booking.patient_name }}</h2>
+            <div style="color: #a3c1ad; letter-spacing: 0.5px;">Clinical Monitor — Service: {{ booking.service }} | Caregiver: {{ booking.caregiver }}</div>
+        </div>
+        
+        <button class="btn btn-glow px-4" data-bs-toggle="modal" data-bs-target="#clinicalNoteModal">+ Add Clinical Note</button>
+    </div>
+
+    <div class="row g-4 mb-5">
+        
+        <div class="col-md-12">
+            <div class="glass-card mb-4 p-5" style="border-radius: 24px;">
+                <h5 class="fw-bold text-white mb-4">Clinical Metric Overview (Heart Rate, O2 & BP)</h5>
+                <canvas id="nurseChart" height="280"></canvas>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h4 class="fw-bold text-white mb-3">Daily Caregiver Logs</h4>
+            <div class="glass-card p-0" style="border-radius: 20px; overflow: hidden;">
+                <table class="table table-dark table-hover mb-0 text-center" style="background: transparent;">
+                    <thead style="background: rgba(124, 160, 135, 0.1);">
+                        <tr>
+                            <th class="py-3">Date</th>
+                            <th class="py-3">Comfort (%)</th>
+                            <th class="py-3">Mood</th>
+                            <th class="py-3">Sleep</th>
+                            <th class="py-3">Vitals (HR/O2/BP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if logs %}
+                            {% for log in logs %}
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle;">
+                                <td class="py-3 text-white-50">{{ log.date }}</td>
+                                <td class="py-3"><span class="badge rounded-pill {% if log.comfort_score > 70 %}bg-success{% elif log.comfort_score > 40 %}bg-warning{% else %}bg-danger{% endif %} px-3">{{ log.comfort_score }}%</span></td>
+                                <td class="py-3">{{ log.mood }}</td>
+                                <td class="py-3 text-white-50">{{ log.sleep }}</td>
+                                <td class="py-3 fw-bold text-info">{{ log.heart_rate }}/{{ log.o2_saturation }}/{{ log.bp_systolic }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="py-5 text-white-50 text-center">No caregiver logs recorded for this patient yet or for this nurse.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <h4 class="fw-bold text-white mb-3">Professional Nurse Notes</h4>
+            <div class="glass-card p-4" style="border-radius: 20px;">
+                {% if notes %}
+                    {% for note in notes %}
+                        <div class="mb-4 p-3 shadow-sm" style="background: rgba(255,255,255,0.05); border-radius: 12px; border-left: 3px solid #dcb37b;">
+                            <div class="small fw-bold mb-1" style="color: #dcb37b;">{{ note.date }} — Nurse: {{ note.nurse }}</div>
+                            <div class="text-white-50 small">{{ note.note }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-white-50 text-center py-5">
+                        <div class="fs-1 mb-3">📝</div>
+                        No clinical notes recorded yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ✅ CLINICAL NOTE MODAL -->
+<div class="modal fade" id="clinicalNoteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(18, 25, 20, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-white">New Professional Clinical Note</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/add_clinical_note" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                    <textarea name="note" class="form-control text-white border-0 shadow-none p-4" rows="5" placeholder="Enter patient assessment, recommended interventions, or clinical observations..." style="background: rgba(255,255,255,0.05); border-radius: 15px;" required></textarea>
+                </div>
+                <div class="modal-footer border-0 pb-4">
+                    <button type="submit" class="btn btn-glow w-100">SUBMIT CLINICAL NOTE</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ CHART.JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('nurseChart').getContext('2d');
+    
+    // Using pre-calculated JSON from backend
+    const nurseLabels = {{ chart_labels | safe }};
+    const hrData = {{ chart_hr | safe }};
+    const o2Data = {{ chart_o2 | safe }};
+    const bpData = {{ chart_bp | safe }};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: nurseLabels,
+            datasets: [
+                {
+                    label: 'Heart Rate',
+                    data: hrData,
+                    borderColor: '#ff3366',
+                    backgroundColor: 'rgba(255, 51, 102, 0.2)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                },
+                {
+                    label: 'O2 Saturation',
+                    data: o2Data,
+                    borderColor: '#00bfff',
+                    backgroundColor: 'rgba(0, 191, 255, 0.2)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Systolic BP',
+                    data: bpData,
+                    borderColor: '#00ffcc',
+                    backgroundColor: 'rgba(0, 255, 204, 0.2)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#ffffff' } }
+            },
+            scales: {
+                x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

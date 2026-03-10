@@ -2,73 +2,95 @@
 {% block content %}
 
 <!-- 🌟 HERO -->
-<section class="hero">
-
-    <div class="hero-content text-center text-white">
-
-        <h1 class="display-4 fw-bold">
-            AI Palliative Care Support
+<section class="hero shadow-2xl">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            Compassionate Care,<br>
+            Powered by Intelligence.
         </h1>
-
-        <p class="lead mb-4">
-            Compassionate care with intelligent assistance
+        <p class="hero-sub mx-auto">
+            Experience the next generation of Palliative Care. Our AI-driven platform connects patients, families, and caregivers with instant support and real-time medical insights.
         </p>
-
-        <a href="/login" class="btn btn-info btn-lg px-4 me-3">Login</a>
-        <a href="/signup" class="btn btn-outline-light btn-lg px-4">Get Started</a>
-
+        <div class="mt-5 d-flex justify-content-center gap-3">
+            <a href="/login" class="btn btn-glow px-5">Launch App</a>
+            <a href="/signup" class="btn btn-outline px-5">Learn More</a>
+        </div>
     </div>
-
 </section>
 
 
 <!-- 🌟 FEATURES -->
-<section class="container py-5 text-white">
-
-    <h2 class="text-center mb-5 fw-bold">
-        Why Choose Our Platform?
-    </h2>
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold text-white mb-3">Smarter Care for Loved Ones</h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">Our platform streamlines every aspect of palliative care, from real-time monitoring to instant AI-guided support.</p>
+    </div>
 
     <div class="row g-4">
-
         <!-- AI Prediction -->
         <div class="col-md-3">
-            <div class="glass-card text-center p-4">
-                <div class="fs-1">🤖</div>
-                <h5 class="mt-3">AI Symptom Prediction</h5>
-                <p>Detect patient condition early</p>
+            <div class="dashboard-card text-center">
+                <div class="icon">🤖</div>
+                <h5 class="fw-bold mt-2">Early Detection</h5>
+                <p class="small opacity-75">Advanced AI models predict patient symptom severity allowing for proactive intervention.</p>
             </div>
         </div>
 
         <!-- Nurse -->
         <div class="col-md-3">
-            <div class="glass-card text-center p-4">
-                <div class="fs-1">🧑‍⚕️</div>
-                <h5 class="mt-3">Nurse Availability</h5>
-                <p>Check real-time support</p>
+            <div class="dashboard-card text-center">
+                <div class="icon">🧑‍⚕️</div>
+                <h5 class="fw-bold mt-2">Expert Access</h5>
+                <p class="small opacity-75">Instantly check the availability of specialized nurses and healthcare professionals nearby.</p>
             </div>
         </div>
 
         <!-- Equipment -->
         <div class="col-md-3">
-            <div class="glass-card text-center p-4">
-                <div class="fs-1">🩺</div>
-                <h5 class="mt-3">Equipment Tracking</h5>
-                <p>Know what is available</p>
+            <div class="dashboard-card text-center">
+                <div class="icon">🔍</div>
+                <h5 class="fw-bold mt-2">Smart Inventory</h5>
+                <p class="small opacity-75">Real-time tracking of medical equipment availability like oxygen or specialized beds.</p>
             </div>
         </div>
 
         <!-- Chatbot -->
         <div class="col-md-3">
-            <div class="glass-card text-center p-4">
-                <div class="fs-1">💬</div>
-                <h5 class="mt-3">AI Medical Chatbot</h5>
-                <p>Instant care guidance</p>
+            <div class="dashboard-card text-center">
+                <div class="icon">💬</div>
+                <h5 class="fw-bold mt-2">24/7 Guidance</h5>
+                <p class="small opacity-75">Our medical chatbot provides instant answers to caregiving questions at any time of day.</p>
             </div>
         </div>
-
     </div>
+</section>
 
+<!-- 🌟 HOW IT WORKS -->
+<section class="container py-5 mt-5">
+    <h2 class="text-center display-6 fw-bold text-white mb-5">Getting Started is Simple</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="step-card text-center">
+                <div class="h3 mb-3" style="color: #dcb37b;">01</div>
+                <h5 class="fw-bold text-white">Create Account</h5>
+                <p class="small text-white-50">Join our community as a caregiver or medical professional in seconds.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="step-card text-center">
+                <div class="h3 mb-3" style="color: #dcb37b;">02</div>
+                <h5 class="fw-bold text-white">Connect & Log</h5>
+                <p class="small text-white-50">Log daily vitals and wellbeing status to feed our intelligent monitoring AI.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="step-card text-center">
+                <div class="h3 mb-3" style="color: #dcb37b;">03</div>
+                <h5 class="fw-bold text-white">Receive Insights</h5>
+                <p class="small text-white-50">Get instant medical predictions and alerts whenever support is needed.</p>
+            </div>
+        </div>
+    </div>
 </section>
 
 {% endblock %}

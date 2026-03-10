@@ -1,21 +1,51 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="form-box">
-<h2>Create Account</h2>
+<div class="form-box shadow-lg" style="border-radius: 20px;">
+    <h2 class="fw-bold mb-4" style="color: #3b4d42;">Create Account</h2>
 
-<form method="POST">
-<input name="username" placeholder="Username" required>
-<input type="password" name="password" placeholder="Password" required>
+    <!-- ✅ FLASH MESSAGE -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert 
+              {% if category == 'success' %}
+                  alert-success
+              {% else %}
+                  alert-danger
+              {% endif %}
+              text-center">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-<select name="role" required>
-<option value="">Select Role</option>
-<option value="caregiver">Caregiver</option>
-<option value="nurse">Nurse</option>
-</select>
+    <form method="POST">
+        <input class="form-control mb-3" name="username" placeholder="Username" required autofocus>
+        <input class="form-control mb-3" type="password" name="password" placeholder="Password" required>
 
-<button class="btn">Signup</button>
-</form>
+        <select class="form-control mb-4" name="role" required>
+            <option value="">Select Role</option>
+            <option value="caregiver">Caregiver</option>
+            <option value="nurse">Nurse</option>
+        </select>
+
+        <button class="btn btn-glow w-100" style="background: linear-gradient(135deg, #8ba894, #668270); color: white; border-radius: 30px; font-weight: bold; padding: 12px;">Signup</button>
+    </form>
+
+    <!-- ✅ LOGIN REDIRECT -->
+    <div style="margin-top:10px; text-align:center;">
+        <span style="color: #3b4d42; font-weight: 500;">Already have an account?</span>
+        <a href="/login" class="link">Login</a>
+    </div>
+
+    <!-- ✅ BACK TO HOME -->
+    <div style="margin-top:20px; text-align:center;">
+        <a href="/" class="btn btn-outline rounded-pill w-100 d-flex align-items-center justify-content-center" style="border-color: #ccc; color: #555; background: #fff;">
+            🏠 Back to Home
+        </a>
+    </div>
 
 </div>
 

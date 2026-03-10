@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="form-box">
+<div class="form-box shadow-lg" style="border-radius: 20px;">
 
-    <h2>Login</h2>
+    <h2 class="fw-bold mb-4" style="color: #3b4d42;">Login</h2>
 
     <!-- ✅ FLASH MESSAGE -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -24,18 +24,17 @@
 
     <!-- ✅ LOGIN FORM -->
     <form method="POST" autocomplete="off">
-
-        <!-- USERNAME -->
         <input
+            class="form-control mb-3"
             type="text"
             name="username"
             placeholder="Username"
             required
             autocomplete="off"
+            autofocus
         >
-
-        <!-- PASSWORD -->
         <input
+            class="form-control mb-4"
             type="password"
             name="password"
             placeholder="Password"
@@ -43,19 +42,26 @@
             autocomplete="new-password"
         >
 
-        <button class="btn">Login</button>
+        <button class="btn w-100 mb-3" style="background: #7ca087; color: white; border-radius: 25px; padding: 12px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(124, 160, 135, 0.4);">LOGIN</button>
 
     </form>
 
     <!-- ✅ FORGOT PASSWORD -->
-    <div style="margin-top:12px; text-align:center;">
-        <a href="/forgot_password" class="link">Forgot Password?</a>
+    <div style="text-align:center;">
+        <a href="/forgot_password" class="link" style="color: #dcb37b; font-weight: 500;">Forgot Password?</a>
     </div>
 
     <!-- ✅ SIGNUP REDIRECT -->
-    <div style="margin-top:8px; text-align:center;">
-        <span>Don't have an account?</span>
-        <a href="/signup" class="link">Signup</a>
+    <div style="margin-top:15px; text-align:center;">
+        <span style="color: #1e2d23;">Don't have an account?</span>
+        <a href="/signup" class="link" style="color: #dcb37b; font-weight: bold;">Signup</a>
+    </div>
+
+    <!-- ✅ BACK TO HOME -->
+    <div style="margin-top:25px; text-align:center;">
+        <a href="/" class="btn btn-outline rounded-pill w-100 d-flex align-items-center justify-content-center" style="border-color: #ccc; color: #555; background: #fff;">
+            🏠 Back to Home
+        </a>
     </div>
 
 </div>

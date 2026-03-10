@@ -1,35 +1,89 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="text-center">Medical Equipment Availability</h2>
+<div class="container py-4">
 
-<table class="table table-bordered mt-4">
+    <!-- ✅ FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert 
+              {% if category == 'success' %}
+                  alert-success
+              {% else %}
+                  alert-danger
+              {% endif %}
+              text-center mx-auto mt-2 mb-4" style="max-width: 800px; border-radius: 12px; letter-spacing: 1px; font-weight: 500;">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-    <tr>
-        <th>Item</th>
-        <th>Quantity</th>
-        <th>Status</th>
-        {% if session.role == 'admin' %}
-        <th>Action</th>
-        {% endif %}
-    </tr>
+    <h2 class="text-center fw-bold text-white mb-5" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Medical Equipment Availability</h2>
 
-    {% for item in items %}
-    <tr>
-        <td>{{ item.item_name }}</td>
-        <td>{{ item.quantity }}</td>
-        <td>{{ item.status }}</td>
+    <div class="table-responsive mx-auto shadow" style="max-width: 1000px; border-radius: 8px; overflow: hidden;">
+        <table class="table table-hover text-center align-middle m-0" style="background: white;">
+            <thead class="bg-light text-dark shadow-sm">
+                <tr>
+                    <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Item</th>
+                    <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Quantity</th>
+                    <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Status</th>
+                    {% if session.role == 'admin' %}
+                    <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Action</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td class="py-4" style="color: #444;">{{ item.item_name }}</td>
+                    <td class="py-4" style="color: #444;">{{ item.quantity }}</td>
+                    <td class="py-4" style="color: #444;">{{ item.status }}</td>
 
-        {% if session.role == 'admin' %}
-        <td>
-            <a href="/update_item/{{ item.id }}" class="btn btn-warning btn-sm">
-                Update
-            </a>
-        </td>
-        {% endif %}
-    </tr>
-    {% endfor %}
+                    {% if session.role == 'admin' %}
+                    <td class="py-4">
+                        <a href="/update_item/{{ item.id }}" class="btn text-white rounded-pill px-4 shadow-sm" style="background: #7ca087; font-weight: 600; font-size: 14px;">
+                            Update
+                        </a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="py-4">No medical items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% if session.role == 'admin' %}
+    <div class="mt-5 mx-auto p-4 shadow-lg text-white" style="max-width: 600px; background: rgba(59, 77, 66, 0.95); border-radius: 15px;">
+        <h4 class="fw-bold mb-3 text-center">📦 Add New Equipment</h4>
+        <form action="/add_item" method="POST">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" name="item_name" class="form-control" placeholder="Item Name" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="quantity" class="form-control" placeholder="Qty" required>
+                </div>
+                <div class="col-md-4">
+                    <select name="status" class="form-select" required>
+                        <option value="Available">Available</option>
+                        <option value="Limited">Limited</option>
+                        <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn text-dark fw-bold w-100" style="background: #e3cd9c; border-radius: 25px;">
+                        ADD EQUIPMENT
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
 
-</table>
+</div>
 
 {% endblock %}

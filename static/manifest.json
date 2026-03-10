@@ -1,0 +1,17 @@
+{
+  "name": "AI Palliative Care",
+  "short_name": "PalliCare",
+  "description": "Premium AI-driven palliative care platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e2d23",
+  "theme_color": "#121914",
+  "icons": [
+    {
+      "src": "/static/images/pwa-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

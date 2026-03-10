@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+    <h2 class="text-center text-white mb-4">Manage Medical Inventory</h2>
+
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6 glass-card p-4">
+            <h5 class="text-white">Add New Item</h5>
+            <form action="/add_item" method="POST">
+                <div class="mb-3">
+                    <label class="text-white">Item Name</label>
+                    <input type="text" name="item_name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="text-white">Quantity</label>
+                    <input type="number" name="quantity" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-success w-100">Add Item</button>
+            </form>
+        </div>
+    </div>
+
+    <table class="table table-dark text-center">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.item_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>
+                    {% if item.quantity > 0 %}
+                        <span class="badge bg-success">Available</span>
+                    {% else %}
+                        <span class="badge bg-danger">Out of Stock</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/update_item/{{ item.id }}" class="btn btn-warning btn-sm">Update</a>
+                    <a href="/delete_item/{{ item.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this item?')">Delete</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No items found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,21 +1,95 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container py-5">
+<div class="container py-4">
 
-    <h2 class="text-center fw-bold text-white mb-5">Nurse Dashboard</h2>
+    <!-- ✅ FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert 
+              {% if category == 'success' %}
+                  alert-success
+              {% else %}
+                  alert-info
+              {% endif %}
+              text-center mx-auto mt-2 mb-4" style="max-width: 800px; border-radius: 12px; letter-spacing: 1px; font-weight: 500;">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-    <div class="row justify-content-center">
-
-        <div class="col-md-4">
-            <div class="card dashboard-card text-center p-4">
-                <div class="icon">📋</div>
-                <h5>View Patient Bookings</h5>
-
-                <a href="/view_all_bookings" class="btn btn-info mt-3">
-                    View
-                </a>
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.5rem;">Nurse Dashboard</h2>
+            <div style="color: #a3c1ad; letter-spacing: 0.5px;">Welcome back, Nurse {{ session['user'] }} 🧑‍⚕️</div>
+        </div>
+        
+        <div class="glass-card p-2 px-4 shadow-sm text-center">
+            <div class="small text-white-50 mb-1">Your Live Status</div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge {% if status == 'Available' %}bg-success{% else %}bg-danger{% endif %} rounded-circle p-1" style="width: 10px; height: 10px;"></span>
+                <span class="fw-bold text-white">{{ status }}</span>
+                <a href="/toggle_status" class="btn btn-sm ms-2 border-0" style="background: rgba(220, 179, 123, 0.4); font-size: 11px; border-radius: 20px;">Toggle</a>
             </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        
+        <div class="col-md-9">
+            <h4 class="fw-bold text-white mb-3 px-2">Current Assignments & In-Patient Service</h4>
+            
+            <div class="glass-card p-0 overflow-hidden" style="border-radius: 20px;">
+                <table class="table table-dark table-hover mb-0 text-center" style="background: transparent;">
+                    <thead style="background: rgba(124, 160, 135, 0.2);">
+                        <tr>
+                            <th class="py-3">Patient Name</th>
+                            <th class="py-3">Service Type</th>
+                            <th class="py-3">Caregiver</th>
+                            <th class="py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if bookings %}
+                            {% for booking in bookings %}
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle;">
+                                <td class="py-3 fw-bold">{{ booking.patient_name }}</td>
+                                <td class="py-3"><span class="badge bg-outline-info border border-info rounded-pill px-3">{{ booking.service }}</span></td>
+                                <td class="py-3 text-white-50">{{ booking.caregiver }}</td>
+                                <td class="py-3">
+                                    <a href="/nurse_patient_view/{{ booking.id }}" class="btn btn-sm px-4" style="background: #7ca087; color: white; border-radius: 25px;">
+                                        Clinical View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="py-5 text-white-50">No active patient bookings assigned yet.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+             <h4 class="fw-bold text-white mb-3">Resources</h4>
+             <div class="dashboard-card mb-3 p-4">
+                 <div class="icon">🩺</div>
+                 <h6 class="fw-bold">Inventory</h6>
+                 <p class="small text-white-50">Check availability of oxygen and beds.</p>
+                 <a href="/medical_items" class="btn btn-outline btn-sm w-100 mt-2" style="font-size: 12px;">Check Stock</a>
+             </div>
+
+             <div class="dashboard-card p-4">
+                 <div class="icon">🎬</div>
+                 <h6 class="fw-bold">Refresher</h6>
+                 <p class="small text-white-50">Watch training videos for equipment.</p>
+                 <a href="/tutorials" class="btn btn-outline btn-sm w-100 mt-2" style="font-size: 12px;">Watch Tutorials</a>
+             </div>
         </div>
 
     </div>
