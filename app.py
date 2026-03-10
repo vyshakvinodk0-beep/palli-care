@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash, send_from_directory
 from datetime import timedelta
 import sqlite3
 import os
@@ -134,6 +134,15 @@ def init_db():
 def home():
     return render_template("landing.html")
 
+# ---------------- PWA ROUTES ----------------
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory('static', 'sw.js')
+
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory('static', 'manifest.json')
+
 
 # ---------------- SIGNUP ----------------
 @app.route("/signup", methods=["GET", "POST"])
@@ -198,6 +207,35 @@ def logout():
     session.clear()
     flash("Logged out successfully ✅", "success")
     return redirect("/login")
+
+
+# ---------------- FORGOT PASSWORD ----------------
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+
+        username = request.form["username"]
+        new_password = request.form["new_password"]
+
+        conn = get_db()
+        user = conn.execute(
+            "SELECT * FROM users WHERE username=?", (username,)
+        ).fetchone()
+
+        if not user:
+            conn.close()
+            flash("Username not found ❌", "danger")
+            return redirect("/forgot_password")
+
+        conn.execute("UPDATE users SET password=? WHERE username=?", (new_password, username))
+        conn.commit()
+        conn.close()
+
+        flash("Password reset successfully ✅ Please login", "success")
+        return redirect("/login")
+
+    return render_template("forgot_password.html")
 
 
 # ---------------- ADMIN DASHBOARD ----------------

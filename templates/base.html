@@ -23,10 +23,13 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- 📱 PWA Manifest -->
-    <link rel="manifest" href="/static/manifest.json">
+    <!-- 📱 PWA Manifest & iOS Support -->
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#121914">
     <link rel="apple-touch-icon" href="/static/images/pwa-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PalliCare">
 </head>
 
 <body class="page-transition">
@@ -157,8 +160,8 @@ window.addEventListener('scroll', () => {
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/static/sw.js')
-            .then(reg => console.log('PWA Service Worker Registered ✅'))
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('PWA Service Worker Registered ✅ with scope:', reg.scope))
             .catch(err => console.log('PWA Service Worker Failed ❌', err));
     });
 }

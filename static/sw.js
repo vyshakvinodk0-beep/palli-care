@@ -16,11 +16,30 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Fetch Event
+// Fetch Event - Network First Strategy with Dynamic Caching
 self.addEventListener('fetch', (event) => {
+    // Only cache GET requests to avoid issues with POST/Forms
+    if (event.request.method !== 'GET') return;
+
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
+        fetch(event.request)
+            .then((response) => {
+                // To avoid caching errors, only cache OK 'basic' responses from our origin
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    return response;
+                }
+                
+                // Clone the response because the stream can only be consumed once
+                const responseToCache = response.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache);
+                });
+                
+                return response;
+            })
+            .catch(() => {
+                // If network fails (offline), fallback to whatever is in the cache
+                return caches.match(event.request);
+            })
     );
 });
