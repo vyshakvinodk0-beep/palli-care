@@ -135,16 +135,25 @@ def init_db():
             "INSERT INTO users(username,password,role) VALUES ('admin','admin','admin')"
         )
 
-    items_count = conn.execute("SELECT COUNT(*) FROM medical_items").fetchone()[0]
-    if items_count == 0:
-        initial_items = [
-            ("Oxygen Cylinder", 5, "Available"),
-            ("Wheelchair", 2, "Limited"),
-            ("Hospital Bed", 1, "Limited"),
-            ("Syringe Kit", 0, "Out of Stock")
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS ambulances(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_no TEXT,
+        driver TEXT,
+        phone TEXT,
+        status TEXT DEFAULT 'Available'
+    )
+    """)
+
+    amb_count = conn.execute("SELECT COUNT(*) FROM ambulances").fetchone()[0]
+    if amb_count == 0:
+        initial_ambs = [
+            ("KL07AB1234", "Ramesh", "9876543210", "Available"),
+            ("KL07CD5678", "Suresh", "9876501234", "Busy"),
+            ("KL07EF9012", "Mohan", "9876512345", "Available")
         ]
-        for name, qty, sts in initial_items:
-            conn.execute("INSERT INTO medical_items(item_name, quantity, status) VALUES (?,?,?)", (name, qty, sts))
+        for v, d, p, s in initial_ambs:
+            conn.execute("INSERT INTO ambulances(vehicle_no, driver, phone, status) VALUES (?,?,?,?)", (v, d, p, s))
 
     conn.commit()
     conn.close()
@@ -751,12 +760,60 @@ def ambulance():
     if "user" not in session:
         return redirect("/login")
 
-    ambulances = [
-        {"vehicle_no": "KL07AB1234", "driver": "Ramesh", "phone": "9876543210", "status": "Available"},
-        {"vehicle_no": "KL07CD5678", "driver": "Suresh", "phone": "9876501234", "status": "Busy"}
-    ]
+    conn = get_db()
+    ambulances = conn.execute("SELECT * FROM ambulances").fetchall()
+    conn.close()
 
     return render_template("ambulance.html", ambulances=ambulances)
+
+# ---------------- MANAGE AMBULANCES (Admin Only) ----------------
+@app.route("/manage_ambulances")
+def manage_ambulances():
+    if session.get("role") != "admin":
+        return redirect("/login")
+
+    conn = get_db()
+    ambulances = conn.execute("SELECT * FROM ambulances").fetchall()
+    conn.close()
+
+    return render_template("admin_manage_ambulances.html", ambulances=ambulances)
+
+# ---------------- UPDATE AMBULANCE (Admin Only) ----------------
+@app.route("/update_ambulance/<int:id>", methods=["POST"])
+def update_ambulance(id):
+    if session.get("role") != "admin":
+        return redirect("/login")
+
+    status = request.form.get("status")
+    driver = request.form.get("driver")
+    phone = request.form.get("phone")
+
+    conn = get_db()
+    conn.execute("UPDATE ambulances SET status=?, driver=?, phone=? WHERE id=?", (status, driver, phone, id))
+    conn.commit()
+    conn.close()
+
+    flash("Ambulance stats updated successfully ✅", "success")
+    return redirect("/manage_ambulances")
+
+# ---------------- ADD AMBULANCE (Admin Only) ----------------
+@app.route("/add_ambulance", methods=["POST"])
+def add_ambulance():
+    if session.get("role") != "admin":
+        return redirect("/login")
+
+    vehicle_no = request.form.get("vehicle_no")
+    driver = request.form.get("driver")
+    phone = request.form.get("phone")
+    status = request.form.get("status", "Available")
+
+    conn = get_db()
+    conn.execute("INSERT INTO ambulances(vehicle_no, driver, phone, status) VALUES (?,?,?,?)", (vehicle_no, driver, phone, status))
+    conn.commit()
+    conn.close()
+
+    flash("New ambulance added successfully ✅", "success")
+    return redirect("/manage_ambulances")
 
 
 # ---------------- TUTORIALS ----------------

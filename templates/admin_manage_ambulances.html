@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- ✅ FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert 
+              {% if category == 'success' %}
+                  alert-success
+              {% else %}
+                  alert-danger
+              {% endif %}
+              text-center mx-auto mt-2 mb-4" style="max-width: 800px; border-radius: 12px; letter-spacing: 1px; font-weight: 500;">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white mb-2" style="text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.5rem;">Manage Ambulances</h2>
+        <div class="mx-auto" style="max-width: 600px; font-style: italic; color: #a3c1ad; font-size: 0.95rem; letter-spacing: 0.5px;">
+            "Efficiency is doing things right; effectiveness is doing the right things."
+        </div>
+        <button class="btn btn-success mt-4 fw-bold px-4" style="border-radius: 30px; box-shadow: 0 4px 15px rgba(25, 135, 84, 0.4);" data-bs-toggle="modal" data-bs-target="#addAmbulanceModal">➕ ADD NEW AMBULANCE</button>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        {% for amb in ambulances %}
+        <div class="col-md-4">
+            <div class="dashboard-card p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="icon" style="font-size: 2rem;">🚑</div>
+                    <span class="badge {% if amb.status == 'Available' %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 py-2">
+                        {{ amb.status }}
+                    </span>
+                </div>
+                
+                <h5 class="fw-bold text-white mb-1">{{ amb.vehicle_no }}</h5>
+                <p class="text-white-50 small mb-3">Driver: {{ amb.driver }}</p>
+
+                <form action="/update_ambulance/{{ amb.id }}" method="POST">
+                    <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">Status</label>
+                        <select name="status" class="form-select form-select-sm bg-dark text-white border-secondary">
+                            <option value="Available" {% if amb.status == 'Available' %}selected{% endif %}>Available</option>
+                            <option value="Busy" {% if amb.status == 'Busy' %}selected{% endif %}>Busy</option>
+                            <option value="Maintenance" {% if amb.status == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">Driver Name</label>
+                        <input type="text" name="driver" class="form-control form-control-sm bg-dark text-white border-secondary" value="{{ amb.driver }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-1">Phone Number</label>
+                        <input type="text" name="phone" class="form-control form-control-sm bg-dark text-white border-secondary" value="{{ amb.phone }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-sm w-100 fw-bold" style="background: rgba(139, 168, 148, 0.8); color: white; border-radius: 10px;">
+                        Update Stats
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="/admin_dashboard" class="btn btn-outline-light px-4" style="border-radius: 30px; letter-spacing: 1px;">← Back to Admin Console</a>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_modals %}
+<!-- ✅ ADD AMBULANCE MODAL -->
+<div class="modal fade" id="addAmbulanceModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px); z-index: 2000;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: rgba(30, 45, 35, 0.98); border-radius: 20px; border: 1px solid #198754; box-shadow: 0 10px 40px rgba(25,135,84,0.3);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold text-white">➕ Add New Ambulance</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/add_ambulance" method="POST">
+          <div class="modal-body text-white px-4">
+              <div class="mb-3">
+                  <label class="form-label" style="color:#e3cd9c;">Vehicle Number</label>
+                  <input type="text" name="vehicle_no" class="form-control bg-dark text-white border-secondary" placeholder="e.g. KL07AB1234" required>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label" style="color:#e3cd9c;">Driver Name</label>
+                  <input type="text" name="driver" class="form-control bg-dark text-white border-secondary" placeholder="Driver Full Name" required>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label" style="color:#e3cd9c;">Phone Number</label>
+                  <input type="text" name="phone" class="form-control bg-dark text-white border-secondary" placeholder="Phone Number" required>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label" style="color:#e3cd9c;">Initial Status</label>
+                  <select name="status" class="form-select bg-dark text-white border-secondary">
+                      <option value="Available">Available</option>
+                      <option value="Busy">Busy</option>
+                      <option value="Maintenance">Maintenance</option>
+                  </select>
+              </div>
+          </div>
+          <div class="modal-footer border-0 pb-4 justify-content-center">
+              <button type="button" class="btn btn-secondary px-4 me-2" data-bs-dismiss="modal" style="border-radius: 30px;">CANCEL</button>
+              <button type="submit" class="btn btn-success fw-bold px-4 py-2" style="border-radius: 30px; letter-spacing: 0.5px;">🚀 REGISTER AMBULANCE</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
