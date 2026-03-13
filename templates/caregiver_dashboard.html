@@ -332,26 +332,26 @@
 </div>
 
 <!-- ✅ SOS CONFIRMATION MODAL -->
-<div class="modal fade" id="sosModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px);">
-  <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="sosModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content" style="background: rgba(45, 10, 10, 0.95); border-radius: 20px; border: 2px solid #dc3545; box-shadow: 0 10px 50px rgba(220,53,69,0.5);">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold text-white">🚨 CONFIRM EMERGENCY SOS</h5>
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold text-white fs-5">🚨 EMERGENCY SOS</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="/trigger_sos" method="POST">
-          <div class="modal-body text-center text-white py-4">
-              <h4 class="text-danger mb-3">Are you sure?</h4>
-              <p class="mb-4">This will immediately trigger a loud alarm on the Admin Dashboard and notify them that you need emergency assistance.</p>
+          <div class="modal-body text-center text-white py-2">
+              <h5 class="text-danger mb-2">Are you sure?</h5>
+              <p class="mb-3 small">This will trigger a loud alarm on the Admin Dashboard and request immediate assistance.</p>
               
-              <div class="alert alert-dark text-start" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
-                  <label class="form-label" style="color:#e3cd9c;">Type "SOS" to confirm:</label>
-                  <input type="text" id="sosConfirmInput" class="form-control bg-dark text-white border-secondary text-center fw-bold fs-4" placeholder="S O S" required autocomplete="off">
+              <div class="alert alert-dark text-start p-2 mb-2" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+                  <label class="form-label small" style="color:#e3cd9c;">Type "SOS" to confirm:</label>
+                  <input type="text" id="sosConfirmInput" class="form-control bg-dark text-white border-secondary text-center fw-bold fs-5 py-2" placeholder="S O S" required autocomplete="off">
               </div>
           </div>
-          <div class="modal-footer border-0 pb-4 justify-content-center">
-              <button type="button" class="btn btn-secondary px-4 me-2" data-bs-dismiss="modal" style="border-radius: 30px;">CANCEL</button>
-              <button type="submit" id="sosSubmitBtn" class="btn btn-danger fw-bold px-5 py-2" style="border-radius: 30px; letter-spacing: 1px;" disabled>🚨 SEND EMERGENCY ALERT</button>
+          <div class="modal-footer border-0 pt-0 pb-3 justify-content-center flex-nowrap">
+              <button type="button" class="btn btn-secondary px-3 btn-sm" data-bs-dismiss="modal" style="border-radius: 30px;">CANCEL</button>
+              <button type="submit" id="sosSubmitBtn" class="btn btn-danger fw-bold px-3 btn-sm" style="border-radius: 30px;" disabled>🚨 SEND ALERT</button>
           </div>
       </form>
     </div>
