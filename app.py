@@ -168,11 +168,16 @@ def home():
 # ---------------- PWA ROUTES ----------------
 @app.route('/sw.js')
 def serve_sw():
-    return send_from_directory(app.static_folder, 'sw.js')
+    response = send_from_directory(app.static_folder, 'sw.js')
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
 
 @app.route('/manifest.json')
 def serve_manifest():
-    return send_from_directory(app.static_folder, 'manifest.json')
+    response = send_from_directory(app.static_folder, 'manifest.json')
+    response.headers['Content-Type'] = 'application/manifest+json'
+    return response
 
 
 # ---------------- SIGNUP ----------------

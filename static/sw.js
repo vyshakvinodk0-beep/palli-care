@@ -1,11 +1,9 @@
-const CACHE_NAME = 'pallicare-v3';
+const CACHE_NAME = 'pallicare-v4';
 const ASSETS = [
     '/',
     '/static/css/style.css',
-    '/static/images/pwa-icon.png',
     '/static/images/pwa-icon-192.png',
-    '/static/images/real_ward.png',
-    '/static/images/real_care.png'
+    '/static/images/pwa-icon.png'
 ];
 
 // Install Event
