@@ -331,32 +331,7 @@
   </div>
 </div>
 
-<!-- ✅ SOS CONFIRMATION MODAL -->
-<div class="modal fade" id="sosModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px); z-index: 1060;">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content" style="background: rgba(45, 10, 10, 0.95); border-radius: 20px; border: 2px solid #dc3545; box-shadow: 0 10px 50px rgba(220,53,69,0.5);">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold text-white pt-3 px-3">🚨 CONFIRM EMERGENCY SOS</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="/trigger_sos" method="POST">
-          <div class="modal-body text-center text-white pt-2 pb-4 px-4">
-              <h4 class="text-danger mb-3">Are you sure?</h4>
-              <p class="mb-4 small">This will immediately trigger a loud alarm on the Admin Dashboard and notify them that you need emergency assistance.</p>
-              
-              <div class="alert alert-dark text-start" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
-                  <label class="form-label" style="color:#e3cd9c;">Type "SOS" to confirm:</label>
-                  <input type="text" id="sosConfirmInput" class="form-control bg-dark text-white border-secondary text-center fw-bold fs-4" placeholder="S O S" required autocomplete="off">
-              </div>
-          </div>
-          <div class="modal-footer border-0 pb-4 justify-content-center">
-              <button type="button" class="btn btn-secondary px-4 me-2" data-bs-dismiss="modal" style="border-radius: 30px;">CANCEL</button>
-              <button type="submit" id="sosSubmitBtn" class="btn btn-danger fw-bold px-5 py-2" style="border-radius: 30px; letter-spacing: 1px;" disabled>🚨 SEND EMERGENCY ALERT</button>
-          </div>
-      </form>
-    </div>
-  </div>
-</div>
+<!-- (Modal moved to end of block) -->
 
 <script>
     // Safeguard to prevent accidental click - requires typing 'SOS'
@@ -404,5 +379,32 @@
     checkSOSStatus();
     setInterval(checkSOSStatus, 5000);
 </script>
+
+<!-- ✅ SOS CONFIRMATION MODAL (Relocated to end for best rendering) -->
+<div class="modal fade" id="sosModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px); z-index: 2000;">
+  <div class="modal-dialog" style="margin-top: 100px;">
+    <div class="modal-content" style="background: rgba(45, 10, 10, 0.98); border-radius: 20px; border: 2px solid #dc3545; box-shadow: 0 10px 60px rgba(220,53,69,0.6);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold text-white">🚨 CONFIRM EMERGENCY</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/trigger_sos" method="POST">
+          <div class="modal-body text-center text-white pt-0 px-4">
+              <h4 class="text-danger fw-bold mb-3">Trigger SOS Alarm?</h4>
+              <p class="mb-4" style="font-size: 0.95rem; line-height: 1.4; opacity: 0.9;">This will instantly notify the Admin and stay locked until they respond.</p>
+              
+              <div class="alert alert-dark text-start p-3" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                  <label class="form-label small mb-2" style="color:#e3cd9c; font-weight: 600;">Type "SOS" to unlock:</label>
+                  <input type="text" id="sosConfirmInput" class="form-control bg-dark text-white border-secondary text-center fw-bold fs-3 py-2" style="border-radius: 10px;" placeholder="SOS" required autocomplete="off">
+              </div>
+          </div>
+          <div class="modal-footer border-0 pb-4 justify-content-center">
+              <button type="button" class="btn btn-secondary px-4 me-2" data-bs-dismiss="modal" style="border-radius: 30px; background: #6c757d;">CANCEL</button>
+              <button type="submit" id="sosSubmitBtn" class="btn btn-danger fw-bold px-4 py-2" style="border-radius: 30px; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(220,53,69,0.4);" disabled>🚀 TRIGGER ALARM</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
