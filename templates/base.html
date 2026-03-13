@@ -149,16 +149,18 @@ window.addEventListener('scroll', () => {
     const nav = document.querySelector('.premium-navbar');
     if (nav) {
         if (window.scrollY > 50) {
-            nav.style.background = 'rgba(12, 18, 14, 0.95)';
-            nav.style.padding = '12px 60px';
+            nav.classList.add('scrolled');
+            // Remove inline styles if they exist from previous versions
+            nav.style.background = '';
+            nav.style.padding = '';
         } else {
-            nav.style.background = 'rgba(18, 25, 20, 0.7)';
-            nav.style.padding = '18px 60px';
+            nav.classList.remove('scrolled');
+            nav.style.background = '';
+            nav.style.padding = '';
         }
     }
 });
 </script>
-
 <!-- 📱 PWA SERVICE WORKER REGISTRATION -->
 <script>
 if ('serviceWorker' in navigator) {
