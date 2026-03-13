@@ -121,15 +121,13 @@ def init_db():
         admin_message TEXT
     )
     """)
+    
+    # Check if 'admin_message' column exists
+    cursor = conn.execute("PRAGMA table_info(emergencies)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if 'admin_message' not in columns:
+        conn.execute("ALTER TABLE emergencies ADD COLUMN admin_message TEXT")
 
-    conn.execute("""
-    CREATE TABLE IF NOT EXISTS emergencies(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        caregiver TEXT,
-        time TEXT,
-        status TEXT DEFAULT 'Active'
-    )
-    """)
 
     admin = conn.execute("SELECT * FROM users WHERE role='admin'").fetchone()
     if not admin:
@@ -568,7 +566,12 @@ def toggle_status():
         return redirect("/login")
 
     conn = get_db()
-    current = conn.execute("SELECT status FROM users WHERE username=?", (session["user"],)).fetchone()[0]
+    user = conn.execute("SELECT status FROM users WHERE username=?", (session["user"],)).fetchone()
+    if not user:
+        conn.close()
+        return redirect("/login")
+        
+    current = user[0]
     new_status = "Busy" if current == "Available" else "Available"
     
     conn.execute("UPDATE users SET status=? WHERE username=?", (new_status, session["user"]))
