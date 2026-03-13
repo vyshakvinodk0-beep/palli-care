@@ -362,7 +362,7 @@
     // Safeguard to prevent accidental click - requires typing 'SOS'
     document.getElementById('sosConfirmInput').addEventListener('input', function(e) {
         const btn = document.getElementById('sosSubmitBtn');
-        if (e.target.value.toUpperCase() === 'SOS') {
+        if (e.target.value.trim().toUpperCase() === 'SOS') {
             btn.disabled = false;
         } else {
             btn.disabled = true;
@@ -373,15 +373,6 @@
     document.getElementById('sosModal').addEventListener('hidden.bs.modal', function () {
         document.getElementById('sosConfirmInput').value = '';
         document.getElementById('sosSubmitBtn').disabled = true;
-    });
-    
-    // Manually handle form submit to ensure modal backdrop is removed
-    document.querySelector('#sosModal form').addEventListener('submit', function() {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('sosModal'));
-        if (modal) {
-            modal.hide();
-        }
-        // Let the form submit naturally after hiding the modal to avoid stuck backdrop
     });
 
     // POLLING FOR ADMIN REPLY

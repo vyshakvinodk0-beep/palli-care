@@ -28,10 +28,18 @@ chatbot_model = pickle.load(open(os.path.join(BASE_DIR, "chatbot_model.pkl"), "r
 vectorizer = pickle.load(open(os.path.join(BASE_DIR, "vectorizer.pkl"), "rb"))
 
 DB_DIR = os.path.join(BASE_DIR, "database")
-DB = os.path.join(DB_DIR, "data.db")
+original_db = os.path.join(DB_DIR, "data.db")
 
-if not os.path.exists(DB_DIR):
-    os.makedirs(DB_DIR)
+# Vercel's environment is read-only, so we must use /tmp/ for an operational SQLite DB
+if os.environ.get("VERCEL") or os.environ.get("VERCEL_URL"):
+    DB = "/tmp/data.db"
+    import shutil
+    if not os.path.exists(DB) and os.path.exists(original_db):
+        shutil.copy(original_db, DB)
+else:
+    DB = original_db
+    if not os.path.exists(DB_DIR):
+        os.makedirs(DB_DIR)
 
 
 # ---------------- DB CONNECTION ----------------
