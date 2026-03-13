@@ -71,6 +71,9 @@
 
                 <a href="/logout" class="btn btn-logout ms-3">Logout</a>
 
+                <!-- 📱 MANUAL INSTALL BUTTON -->
+                <button id="installBtn" class="btn btn-outline-warning ms-2 d-none" style="border-radius: 20px; font-size: 11px; padding: 5px 15px;">📲 Install App</button>
+
             {% else %}
 
                 <a href="/login" class="btn btn-login me-2">Login</a>
@@ -188,11 +191,33 @@ if ('serviceWorker' in navigator) {
 
 // Intercept Add to Home Screen prompt
 let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
 window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
     e.preventDefault();
+    // Stash the event so it can be triggered later.
     deferredPrompt = e;
+    // Update UI notify the user they can install the PWA
+    if (installBtn) {
+        installBtn.classList.remove('d-none');
+    }
     console.log('PWA Install Prompt ready 🚀');
 });
+
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        // Show the install prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        // We've used the prompt, and can't use it again, throw it away
+        deferredPrompt = null;
+        installBtn.classList.add('d-none');
+    });
+}
 </script>
 
 <!-- 📥 EXTRA MODALS (placed outside transforms) -->
