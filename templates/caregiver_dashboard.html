@@ -190,87 +190,93 @@
 
 </div>
 
+
 <!-- ✅ CHART.JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('vitalsChart').getContext('2d');
-    
-    // Colors matching screenshot
-    const heartRateColor = '#ff3366';
-    const o2Color = '#00bfff';
-    const bpColor = '#00ffcc';
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('vitalsChart').getContext('2d');
+        
+        // Colors matching screenshot
+        const heartRateColor = '#ff3366';
+        const o2Color = '#00bfff';
+        const bpColor = '#00ffcc';
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ chart_labels | safe }},
-            datasets: [
-                {
-                    label: 'Heart Rate (bpm)',
-                    data: {{ chart_hr | safe }},
-                    borderColor: heartRateColor,
-                    backgroundColor: 'rgba(255, 51, 102, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: heartRateColor,
-                    pointRadius: 4
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels | safe }},
+                datasets: [
+                    {
+                        label: 'Heart Rate (bpm)',
+                        data: {{ chart_hr | safe }},
+                        borderColor: heartRateColor,
+                        backgroundColor: 'rgba(255, 51, 102, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: heartRateColor,
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'O2 Saturation (%)',
+                        data: {{ chart_o2 | safe }},
+                        borderColor: o2Color,
+                        backgroundColor: 'rgba(0, 191, 255, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: o2Color,
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Systolic BP (mmHg)',
+                        data: {{ chart_bp | safe }},
+                        borderColor: bpColor,
+                        backgroundColor: 'rgba(0, 255, 204, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: bpColor,
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#cccccc',
+                            usePointStyle: false,
+                            boxWidth: 40,
+                            padding: 20
+                        }
+                    }
                 },
-                {
-                    label: 'O2 Saturation (%)',
-                    data: {{ chart_o2 | safe }},
-                    borderColor: o2Color,
-                    backgroundColor: 'rgba(0, 191, 255, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: o2Color,
-                    pointRadius: 4
-                },
-                {
-                    label: 'Systolic BP (mmHg)',
-                    data: {{ chart_bp | safe }},
-                    borderColor: bpColor,
-                    backgroundColor: 'rgba(0, 255, 204, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: bpColor,
-                    pointRadius: 4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        color: '#cccccc',
-                        usePointStyle: false,
-                        boxWidth: 40,
-                        padding: 20
+                scales: {
+                    x: {
+                        ticks: { color: '#cccccc' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    y: {
+                        ticks: { color: '#cccccc' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        min: 70,
+                        max: 130
                     }
                 }
-            },
-            scales: {
-                x: {
-                    ticks: { color: '#cccccc' },
-                    grid: { color: 'rgba(255,255,255,0.05)' }
-                },
-                y: {
-                    ticks: { color: '#cccccc' },
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    min: 70,
-                    max: 130
-                }
             }
-        }
+        });
     });
 </script>
 
+{% endblock %}
+
+{% block extra_modals %}
 <!-- ✅ UPDATE STATS MODAL -->
-<div class="modal fade" id="updateStatsModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(5px);">
+<div class="modal fade" id="updateStatsModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(5px); z-index: 1070;">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="background: rgba(30, 45, 35, 0.95); border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
       <div class="modal-header border-0">
@@ -331,59 +337,10 @@
   </div>
 </div>
 
-<!-- (Modal moved to end of block) -->
-
-<script>
-    // Safeguard to prevent accidental click - requires typing 'SOS'
-    document.getElementById('sosConfirmInput').addEventListener('input', function(e) {
-        const btn = document.getElementById('sosSubmitBtn');
-        if (e.target.value.trim().toUpperCase() === 'SOS') {
-            btn.disabled = false;
-        } else {
-            btn.disabled = true;
-        }
-    });
-
-    // Reset modal on close
-    document.getElementById('sosModal').addEventListener('hidden.bs.modal', function () {
-        document.getElementById('sosConfirmInput').value = '';
-        document.getElementById('sosSubmitBtn').disabled = true;
-    });
-
-    // POLLING FOR ADMIN REPLY
-    function checkSOSStatus() {
-        fetch('/api/check_sos_status')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('sosReplyContainer');
-                const message = document.getElementById('sosReplyMessage');
-                
-                if (data.has_message) {
-                    message.innerText = data.message;
-                    container.classList.remove('d-none');
-                } else {
-                    container.classList.add('d-none');
-                }
-            })
-            .catch(error => console.error('Error checking SOS status:', error));
-    }
-
-    function dismissSOSReply() {
-        fetch('/api/dismiss_sos_message', { method: 'POST' })
-            .then(() => {
-                document.getElementById('sosReplyContainer').classList.add('d-none');
-            });
-    }
-
-    // Check immediately and then every 5 seconds
-    checkSOSStatus();
-    setInterval(checkSOSStatus, 5000);
-</script>
-
-<!-- ✅ SOS CONFIRMATION MODAL (Relocated to end for best rendering) -->
+<!-- ✅ SOS CONFIRMATION MODAL -->
 <div class="modal fade" id="sosModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px); z-index: 2000;">
-  <div class="modal-dialog" style="margin-top: 100px;">
-    <div class="modal-content" style="background: rgba(45, 10, 10, 0.98); border-radius: 20px; border: 2px solid #dc3545; box-shadow: 0 10px 60px rgba(220,53,69,0.6);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: rgba(45, 10, 10, 0.98); border-radius: 20px; border: 2px solid #dc3545; box-shadow: 0 10px 60px rgba(220,53,69,0.5);">
       <div class="modal-header border-0">
         <h5 class="modal-title fw-bold text-white">🚨 CONFIRM EMERGENCY</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -407,4 +364,57 @@
   </div>
 </div>
 
+<script>
+    // Safeguard to prevent accidental click - requires typing 'SOS'
+    document.addEventListener('DOMContentLoaded', function() {
+        const sosInput = document.getElementById('sosConfirmInput');
+        if (sosInput) {
+            sosInput.addEventListener('input', function(e) {
+                const btn = document.getElementById('sosSubmitBtn');
+                if (btn) {
+                    btn.disabled = (e.target.value.trim().toUpperCase() !== 'SOS');
+                }
+            });
+        }
+
+        // Reset modal on close
+        const sosModalEl = document.getElementById('sosModal');
+        if (sosModalEl) {
+            sosModalEl.addEventListener('hidden.bs.modal', function () {
+                if (sosInput) sosInput.value = '';
+                const btn = document.getElementById('sosSubmitBtn');
+                if (btn) btn.disabled = true;
+            });
+        }
+
+        // POLLING FOR ADMIN REPLY
+        function checkSOSStatus() {
+            fetch('/api/check_sos_status')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('sosReplyContainer');
+                    const message = document.getElementById('sosReplyMessage');
+                    if (data.has_message) {
+                        if (message) message.innerText = data.message;
+                        if (container) container.classList.remove('d-none');
+                    } else {
+                        if (container) container.classList.add('d-none');
+                    }
+                })
+                .catch(error => console.error('Error checking SOS status:', error));
+        }
+
+        // Initial check and interval
+        checkSOSStatus();
+        setInterval(checkSOSStatus, 5000);
+    });
+
+    function dismissSOSReply() {
+        fetch('/api/dismiss_sos_message', { method: 'POST' })
+            .then(() => {
+                const container = document.getElementById('sosReplyContainer');
+                if (container) container.classList.add('d-none');
+            });
+    }
+</script>
 {% endblock %}
