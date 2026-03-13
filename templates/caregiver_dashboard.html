@@ -23,9 +23,14 @@
     {% endwith %}
 
     <!-- ✅ EMERGENCY SOS BANNER (if active) -->
-    <!-- (Optional, keeping it in case they still want the SOS feature) -->
     <div class="text-end mb-3">
         <button class="btn btn-danger btn-lg fw-bold px-4" style="border-radius: 30px; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4); animation: pulse 2s infinite;" data-bs-toggle="modal" data-bs-target="#sosModal">🚨 EMERGENCY SOS</button>
+    </div>
+    
+    <!-- ✅ SOS REPLY BANNER CONTAINER -->
+    <div id="sosReplyContainer" class="d-none text-center fw-bold mt-2 mb-4 mx-auto" style="max-width: 800px; background-color: #d1e7dd; color: #0f5132; border-radius: 12px; font-size: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #0f5132;">
+        <div>🚑 ADMIN REPLY: <span id="sosReplyMessage"></span></div>
+        <button onclick="dismissSOSReply()" class="btn btn-sm btn-outline-success mt-2 fw-bold" style="border-radius: 20px;">Dismiss</button>
     </div>
     <style>
     @keyframes pulse {
@@ -371,6 +376,35 @@
         document.getElementById('sosConfirmInput').value = '';
         document.getElementById('sosSubmitBtn').disabled = true;
     });
+
+    // POLLING FOR ADMIN REPLY
+    function checkSOSStatus() {
+        fetch('/api/check_sos_status')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('sosReplyContainer');
+                const message = document.getElementById('sosReplyMessage');
+                
+                if (data.has_message) {
+                    message.innerText = data.message;
+                    container.classList.remove('d-none');
+                } else {
+                    container.classList.add('d-none');
+                }
+            })
+            .catch(error => console.error('Error checking SOS status:', error));
+    }
+
+    function dismissSOSReply() {
+        fetch('/api/dismiss_sos_message', { method: 'POST' })
+            .then(() => {
+                document.getElementById('sosReplyContainer').classList.add('d-none');
+            });
+    }
+
+    // Check immediately and then every 5 seconds
+    checkSOSStatus();
+    setInterval(checkSOSStatus, 5000);
 </script>
 
 {% endblock %}

@@ -32,7 +32,7 @@
     <meta name="apple-mobile-web-app-title" content="PalliCare">
 </head>
 
-<body class="page-transition">
+<body class="bg-dark text-light">
 
 <!-- 🌟 ULTRA PREMIUM NAVBAR -->
 <nav class="navbar navbar-expand-lg premium-navbar fixed-top">
@@ -84,7 +84,7 @@
 
 
 <!-- ✅ PAGE CONTENT (padding for fixed navbar) -->
-<div class="container py-5" style="padding-top: 130px !important;">
+<div id="main-content" class="container py-5 page-transition" style="padding-top: 130px !important;">
     {% block content %}{% endblock %}
 </div>
 
@@ -129,12 +129,15 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Otherwise, intercept and animate out
             e.preventDefault();
-            document.body.classList.remove('page-transition');
-            document.body.classList.add('page-transition-out');
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) {
+                mainContent.classList.remove('page-transition');
+                mainContent.classList.add('page-transition-out');
+            }
             
             setTimeout(() => {
                 window.location.href = target;
-            }, 300); // Wait 300ms for animation to finish
+            }, 400); // Wait 400ms for animation to finish
         });
     });
 });

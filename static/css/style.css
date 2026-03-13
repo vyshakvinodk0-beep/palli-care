@@ -672,19 +672,31 @@ input:focus, select:focus {
    PAGE TRANSITIONS
 ========================================= */
 .page-transition {
-    animation: fadeIn 0.4s ease-out forwards;
+    animation: pageFadeInUp 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards;
 }
 
 .page-transition-out {
-    animation: fadeOut 0.3s ease-in forwards;
+    animation: pageFadeOutUp 0.4s cubic-bezier(0.2, 1, 0.3, 1) forwards;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@keyframes pageFadeInUp {
+    0% { 
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% { 
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+@keyframes pageFadeOutUp {
+    0% { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateY(-30px);
+    }
 }

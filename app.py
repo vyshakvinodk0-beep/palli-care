@@ -22,11 +22,16 @@ def add_header(response):
 
 
 # ---------------- LOAD ML MODELS ----------------
-symptom_model = pickle.load(open("model.pkl", "rb"))
-chatbot_model = pickle.load(open("chatbot_model.pkl", "rb"))
-vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+symptom_model = pickle.load(open(os.path.join(BASE_DIR, "model.pkl"), "rb"))
+chatbot_model = pickle.load(open(os.path.join(BASE_DIR, "chatbot_model.pkl"), "rb"))
+vectorizer = pickle.load(open(os.path.join(BASE_DIR, "vectorizer.pkl"), "rb"))
 
-DB = "database/data.db"
+DB_DIR = os.path.join(BASE_DIR, "database")
+DB = os.path.join(DB_DIR, "data.db")
+
+if not os.path.exists(DB_DIR):
+    os.makedirs(DB_DIR)
 
 
 # ---------------- DB CONNECTION ----------------
@@ -104,6 +109,16 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         caregiver TEXT,
         time TEXT,
+        status TEXT DEFAULT 'Active',
+        admin_message TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS emergencies(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        caregiver TEXT,
+        time TEXT,
         status TEXT DEFAULT 'Active'
     )
     """)
@@ -128,6 +143,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+init_db()
 
 # ---------------- HOME ----------------
 @app.route("/")
@@ -137,11 +153,11 @@ def home():
 # ---------------- PWA ROUTES ----------------
 @app.route('/sw.js')
 def serve_sw():
-    return send_from_directory('static', 'sw.js')
+    return send_from_directory(app.static_folder, 'sw.js')
 
 @app.route('/manifest.json')
 def serve_manifest():
-    return send_from_directory('static', 'manifest.json')
+    return send_from_directory(app.static_folder, 'manifest.json')
 
 
 # ---------------- SIGNUP ----------------
@@ -251,8 +267,8 @@ def admin_dashboard():
 
     return render_template("admin_dashboard.html", users=users, bookings=bookings)
 
-import json
 from flask import jsonify
+from datetime import datetime
 
 # ---------------- API CHECK SOS (Admin Only) ----------------
 @app.route("/api/check_sos")
@@ -274,13 +290,64 @@ def resolve_sos(id):
     if session.get("role") != "admin":
         return redirect("/login")
         
+    admin_message = request.form.get("admin_message", "")
+    
     conn = get_db()
-    conn.execute("UPDATE emergencies SET status='Resolved' WHERE id=?", (id,))
+    conn.execute("UPDATE emergencies SET status='Resolved', admin_message=? WHERE id=?", (admin_message, id))
     conn.commit()
     conn.close()
     
-    flash("Emergency marked as resolved ✅", "success")
+    flash("Emergency marked as resolved and message sent to Caregiver ✅", "success")
     return redirect("/admin_dashboard")
+
+# ---------------- TRIGGER EMERGENCY SOS ----------------
+@app.route("/trigger_sos", methods=["POST"])
+def trigger_sos():
+    if session.get("role") != "caregiver":
+        return redirect("/login")
+        
+    conn = get_db()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute("INSERT INTO emergencies (caregiver, time, status) VALUES (?, ?, 'Active')", (session["user"], current_time))
+    conn.commit()
+    conn.close()
+    
+    flash("EMERGENCY SOS TRIGGERED! Admin has been notified. 🚨", "danger")
+    return redirect("/caregiver_dashboard")
+
+# ---------------- CAREGIVER CHECK SOS STATUS ----------------
+@app.route("/api/check_sos_status")
+def check_sos_status():
+    if session.get("role") != "caregiver":
+        return jsonify({"status": "error"})
+        
+    conn = get_db()
+    # Find the most recently resolved SOS for this caregiver that has a message
+    last_resolved = conn.execute(
+        "SELECT * FROM emergencies WHERE caregiver=? AND status='Resolved' AND admin_message IS NOT NULL AND admin_message != '' ORDER BY id DESC LIMIT 1",
+        (session["user"],)
+    ).fetchone()
+    conn.close()
+    
+    if last_resolved:
+        return jsonify({"has_message": True, "message": last_resolved["admin_message"]})
+    
+    return jsonify({"has_message": False})
+
+# ---------------- CAREGIVER DISMISS SOS MESSAGE ----------------
+@app.route("/api/dismiss_sos_message", methods=["POST"])
+def dismiss_sos_message():
+    if session.get("role") != "caregiver":
+        return jsonify({"status": "error"})
+        
+    conn = get_db()
+    conn.execute(
+        "UPDATE emergencies SET admin_message = NULL WHERE caregiver=? AND status='Resolved'",
+        (session["user"],)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success"})
 
 # ---------------- MANAGE USERS (Admin Only) ----------------
 @app.route("/manage_users")
@@ -415,21 +482,7 @@ def update_stats():
     flash("Daily stats successfully logged! 📝", "success")
     return redirect("/caregiver_dashboard")
 
-from datetime import datetime
-
-# ---------------- TRIGGER EMERGENCY SOS ----------------
-@app.route("/trigger_sos", methods=["POST"])
-def trigger_sos():
-    if session.get("role") != "caregiver":
-        return redirect("/login")
-        
-    conn = get_db()
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    conn.execute("INSERT INTO emergencies (caregiver, time, status) VALUES (?, ?, 'Active')", (session["user"], current_time))
-    conn.commit()
-    conn.close()
-    
-    flash("EMERGENCY SOS TRIGGERED! Admin has been notified. 🚨", "danger")
+    flash("Daily stats successfully logged! 📝", "success")
     return redirect("/caregiver_dashboard")
 
 
@@ -778,6 +831,31 @@ def chatbot():
         elif "hello" in msg or "hi" in msg:
             reply = f"Hello {session['user']} 💙 How can I assist you today?"
 
+        # --- Rule-based Medical Queries ---
+        elif "fever" in msg or "temperature" in msg:
+            reply = "🌡️ For a fever, ensure the patient is well-hydrated. Apply a cool, damp cloth to their forehead. If the temperature exceeds 101°F (38.3°C) or persists, please contact a doctor or trigger an SOS."
+            
+        elif "pain" in msg or "ache" in msg:
+            reply = "💊 For pain management, ensure the patient is in a comfortable position. Administer prescribed pain relief medication as directed. If the pain is severe, sudden, or unmanageable, contact emergencies immediately."
+            
+        elif "breath" in msg or "breathing" in msg or "wheez" in msg:
+            reply = "🫁 If experiencing breathing difficulty, elevate the patient's head and loosen any tight clothing. If they are on oxygen therapy, check the flow rate. If it worsens, trigger an SOS or call an ambulance immediately!"
+            
+        elif "nausea" in msg or "vomit" in msg:
+            reply = "🤢 For nausea, offer small, frequent sips of clear fluids like water or ginger tea. Avoid heavy, greasy, or strong-smelling foods. Administer prescribed anti-nausea medication if available."
+            
+        elif "fatigue" in msg or "tired" in msg or "weak" in msg:
+            reply = "🛌 Fatigue is common in palliative care. Ensure the patient gets plenty of undisturbed rest. Keep essential items within their easy reach to minimize physical exertion."
+            
+        elif "bedsore" in msg or "ulcer" in msg or "skin break" in msg:
+            reply = "🧴 To prevent or manage bedsores, gently reposition the patient every 2 hours. Keep their skin clean and dry, and use pressure-relieving cushions. Inform a nurse if you notice red spots or broken skin."
+            
+        elif "emergency" in msg or "unconscious" in msg or "collapse" in msg:
+            reply = "🚨 THIS IS AN EMERGENCY! If the patient is unresponsive, immediately call an ambulance from the Ambulance tab and trigger the SOS from your dashboard. Begin CPR if you are trained and it is aligned with the patient's care plan."
+            
+        elif "eat" in msg or "appetite" in msg or "food" in msg:
+            reply = "🍲 A loss of appetite is normal. Offer small, high-calorie, nutritious meals whenever they feel hungry. Do not force them to eat. Nutrition shakes can also be a helpful alternative."
+
         else:
             reply = """I can help you with:
 
@@ -787,6 +865,7 @@ def chatbot():
 • View medical equipment  
 • Watch caregiving tutorials  
 • My bookings 💙
+• Basic medical advice (e.g., pain, fever, nausea, bedsores)
 """
 
     return render_template("chatbot.html", reply=reply, user_msg=user_msg)
@@ -794,9 +873,4 @@ def chatbot():
 
 # ---------------- MAIN ----------------
 if __name__ == "__main__":
-
-    if not os.path.exists("database"):
-        os.makedirs("database")
-
-    init_db()
     app.run(debug=True)
