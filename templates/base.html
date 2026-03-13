@@ -165,11 +165,34 @@ window.addEventListener('scroll', () => {
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('PWA Service Worker Registered ✅ with scope:', reg.scope))
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(reg => {
+                console.log('PWA Service Worker Registered ✅');
+                // Check for updates
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                console.log('New content is available; please refresh.');
+                            } else {
+                                console.log('Content is cached for offline use.');
+                            }
+                        }
+                    };
+                };
+            })
             .catch(err => console.log('PWA Service Worker Failed ❌', err));
     });
 }
+
+// Intercept Add to Home Screen prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log('PWA Install Prompt ready 🚀');
+});
 </script>
 
 <!-- 📥 EXTRA MODALS (placed outside transforms) -->

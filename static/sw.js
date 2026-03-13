@@ -1,8 +1,9 @@
-const CACHE_NAME = 'pallicare-v1';
+const CACHE_NAME = 'pallicare-v2';
 const ASSETS = [
     '/',
     '/static/css/style.css',
     '/static/images/pwa-icon.png',
+    '/static/images/pwa-icon-192.png',
     '/static/images/real_ward.png',
     '/static/images/real_care.png'
 ];
