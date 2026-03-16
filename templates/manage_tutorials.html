@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="form-title text-white">📽️ Manage Care Tutorials</h2>
+        <p class="text-light opacity-75">Add or remove training videos for caregivers</p>
+    </div>
+
+    <!-- ✅ FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert {% if category == 'success' %}alert-success{% else %}alert-danger{% endif %} text-center mb-4">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+        <!-- ➕ ADD NEW TUTORIAL -->
+        <div class="col-md-4">
+            <div class="dashboard-card p-4">
+                <h5 class="fw-bold text-white mb-4"><i class="fas fa-plus-circle me-2 text-info"></i> Add New Video</h5>
+                <form action="/add_tutorial" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50">Video Title</label>
+                        <input type="text" name="title" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Wound Care" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-white-50">YouTube Link</label>
+                        <input type="url" name="link" class="form-control bg-dark text-white border-secondary" placeholder="https://youtube.com/..." required>
+                        <small class="text-info opacity-75 mt-1 d-block"><i class="fas fa-info-circle me-1"></i> Normal or embed links work</small>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100 fw-bold">ADD TUTORIAL</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 📋 CURRENT VIDEOS -->
+        <div class="col-md-8">
+            <div class="glass-card table-responsive p-0 overflow-hidden" style="border-radius: 20px;">
+                <table class="table table-dark table-hover mb-0 text-center">
+                    <thead style="background: rgba(124, 160, 135, 0.2);">
+                        <tr>
+                            <th class="py-3">Title</th>
+                            <th class="py-3">Preview</th>
+                            <th class="py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if videos %}
+                            {% for video in videos %}
+                            <tr class="align-middle">
+                                <td class="py-3 fw-bold text-white text-start ps-4">{{ video.title }}</td>
+                                <td class="py-3">
+                                    <a href="{{ video.link }}" target="_blank" class="text-info small text-decoration-none">
+                                        <i class="fas fa-external-link-alt me-1"></i> Open Link
+                                    </a>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <a href="/delete_tutorial/{{ video.id }}" class="btn btn-sm btn-danger rounded-pill px-3" onclick="return confirm('Delete this tutorial video?')">
+                                        <i class="fas fa-trash-alt me-1"></i> Delete
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="py-5 text-white-50">No tutorial videos available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="/admin_dashboard" class="btn btn-outline-light rounded-pill px-5">
+            <i class="fas fa-arrow-left me-2"></i> Back to Control Panel
+        </a>
+    </div>
+</div>
+
+{% endblock %}

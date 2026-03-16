@@ -6,76 +6,208 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <a href="/nurse_dashboard" class="link me-3 fw-bold" style="color: #7ca087;">← Back to Dashboard</a>
-            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.2rem;">Patient: {{ booking.patient_name }}</h2>
-            <div style="color: #a3c1ad; letter-spacing: 0.5px;">Clinical Monitor — Service: {{ booking.service }} | Caregiver: {{ booking.caregiver }}</div>
+            <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.2rem;"><i class="fas fa-user-injured text-info me-2"></i> Patient: {{ booking.patient_name }}</h2>
+            <div style="color: #a3c1ad; letter-spacing: 0.5px;"><i class="fas fa-notes-medical me-1"></i> Clinical Monitor — {{ booking.service }} | Caregiver: {{ booking.caregiver }}</div>
         </div>
         
-        <button class="btn btn-glow px-4" data-bs-toggle="modal" data-bs-target="#clinicalNoteModal">+ Add Clinical Note</button>
+        <button class="btn btn-glow px-4" data-bs-toggle="modal" data-bs-target="#clinicalNoteModal"><i class="fas fa-plus me-2"></i> Add Clinical Note</button>
     </div>
 
     <div class="row g-4 mb-5">
         
         <div class="col-md-12">
-            <div class="glass-card mb-4 p-5" style="border-radius: 24px;">
-                <h5 class="fw-bold text-white mb-4">Clinical Metric Overview (Heart Rate, O2 & BP)</h5>
-                <canvas id="nurseChart" height="280"></canvas>
-            </div>
-        </div>
+            <!-- ✅ TABS FOR CLINICAL DATA -->
+            <ul class="nav nav-tabs border-0 mb-4 gap-3 bg-dark p-2 rounded-pill shadow-sm" style="max-width: fit-content;">
+                <li class="nav-item">
+                    <button class="nav-link active rounded-pill px-4 border-0 fw-bold" id="vitals-tab" data-bs-toggle="tab" data-bs-target="#vitalsContent"><i class="fas fa-heartbeat me-2"></i> Vitals</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link rounded-pill px-4 border-0 fw-bold" id="meds-tab" data-bs-toggle="tab" data-bs-target="#medsContent"><i class="fas fa-capsules me-2"></i> Medications</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link rounded-pill px-4 border-0 fw-bold" id="exercise-tab" data-bs-toggle="tab" data-bs-target="#exerciseContent"><i class="fas fa-running me-2"></i> Exercise/Rehab</button>
+                </li>
+            </ul>
 
-        <div class="col-md-8">
-            <h4 class="fw-bold text-white mb-3">Daily Caregiver Logs</h4>
-            <div class="glass-card p-0" style="border-radius: 20px; overflow: hidden;">
-                <table class="table table-dark table-hover mb-0 text-center" style="background: transparent;">
-                    <thead style="background: rgba(124, 160, 135, 0.1);">
-                        <tr>
-                            <th class="py-3">Date</th>
-                            <th class="py-3">Comfort (%)</th>
-                            <th class="py-3">Mood</th>
-                            <th class="py-3">Sleep</th>
-                            <th class="py-3">Vitals (HR/O2/BP)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if logs %}
-                            {% for log in logs %}
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle;">
-                                <td class="py-3 text-white-50">{{ log.date }}</td>
-                                <td class="py-3"><span class="badge rounded-pill {% if log.comfort_score > 70 %}bg-success{% elif log.comfort_score > 40 %}bg-warning{% else %}bg-danger{% endif %} px-3">{{ log.comfort_score }}%</span></td>
-                                <td class="py-3">{{ log.mood }}</td>
-                                <td class="py-3 text-white-50">{{ log.sleep }}</td>
-                                <td class="py-3 fw-bold text-info">{{ log.heart_rate }}/{{ log.o2_saturation }}/{{ log.bp_systolic }}</td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="5" class="py-5 text-white-50 text-center">No caregiver logs recorded for this patient yet or for this nurse.</td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <h4 class="fw-bold text-white mb-3">Professional Nurse Notes</h4>
-            <div class="glass-card p-4" style="border-radius: 20px;">
-                {% if notes %}
-                    {% for note in notes %}
-                        <div class="mb-4 p-3 shadow-sm" style="background: rgba(255,255,255,0.05); border-radius: 12px; border-left: 3px solid #dcb37b;">
-                            <div class="small fw-bold mb-1" style="color: #dcb37b;">{{ note.date }} — Nurse: {{ note.nurse }}</div>
-                            <div class="text-white-50 small">{{ note.note }}</div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="text-white-50 text-center py-5">
-                        <div class="fs-1 mb-3">📝</div>
-                        No clinical notes recorded yet.
+            <div class="tab-content">
+                <!-- 📊 VITALS CONTENT -->
+                <div class="tab-pane fade show active" id="vitalsContent">
+                    <div class="glass-card mb-4 p-5" style="border-radius: 24px;">
+                        <h5 class="fw-bold text-white mb-4">Clinical Metric Overview (Heart Rate, O2 & BP)</h5>
+                        <canvas id="nurseChart" height="280"></canvas>
                     </div>
-                {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="fw-bold text-white mb-3">Daily Caregiver Logs</h4>
+                            <div class="glass-card p-0" style="border-radius: 20px; overflow: hidden;">
+                                <table class="table table-dark table-hover mb-0 text-center" style="background: transparent;">
+                                    <thead style="background: rgba(124, 160, 135, 0.1);">
+                                        <tr>
+                                            <th class="py-3">Date</th>
+                                            <th class="py-3">Comfort (%)</th>
+                                            <th class="py-3">Mood</th>
+                                            <th class="py-3">Vitals (HR/O2/BP)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if logs %}
+                                            {% for log in logs %}
+                                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle;">
+                                                <td class="py-3 text-white-50">{{ log.date }}</td>
+                                                <td class="py-3"><span class="badge rounded-pill {% if log.comfort_score > 70 %}bg-success{% elif log.comfort_score > 40 %}bg-warning{% else %}bg-danger{% endif %} px-3">{{ log.comfort_score }}%</span></td>
+                                                <td class="py-3">{{ log.mood }}</td>
+                                                <td class="py-3 fw-bold text-info">{{ log.heart_rate }}/{{ log.o2_saturation }}/{{ log.bp_systolic }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="py-5 text-white-50 text-center">No caregiver logs recorded yet.</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="fw-bold text-white mb-3">Nurse Clinical Notes</h4>
+                            <div class="glass-card p-4" style="border-radius: 20px;">
+                                {% if notes %}
+                                    {% for note in notes %}
+                                        <div class="mb-4 p-3 shadow-sm" style="background: rgba(255,255,255,0.05); border-radius: 12px; border-left: 3px solid #dcb37b;">
+                                            <div class="small fw-bold mb-1" style="color: #dcb37b;">{{ note.date }} — {{ note.nurse }}</div>
+                                            <div class="text-white-50 small">{{ note.note }}</div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-white-50 text-center py-5">No clinical notes recorded yet.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 💊 MEDICATION CONTENT -->
+                <div class="tab-pane fade" id="medsContent">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="glass-card p-4 h-100">
+                                <h5 class="fw-bold text-white mb-4"><i class="fas fa-plus-circle text-info me-2"></i> Log Medication</h5>
+                                <form action="/add_medication" method="POST">
+                                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                    <div class="mb-3">
+                                        <label class="small text-white-50">Medicine Name</label>
+                                        <input type="text" name="med_name" class="form-control bg-dark border-0 text-white" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="small text-white-50">Dosage</label>
+                                        <input type="text" name="dosage" class="form-control bg-dark border-0 text-white" placeholder="e.g. 500mg" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="small text-white-50">Time administered</label>
+                                        <input type="time" name="time" class="form-control bg-dark border-0 text-white" required>
+                                    </div>
+                                    <button class="btn btn-glow w-100">Add Entry</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h4 class="fw-bold text-white mb-3">Medication History</h4>
+                            <div class="glass-card p-0 overflow-hidden">
+                                <table class="table table-dark table-hover mb-0 text-center">
+                                    <thead style="background: rgba(124, 160, 135, 0.1);">
+                                        <tr>
+                                            <th class="py-3">Date/Time</th>
+                                            <th class="py-3">Medicine</th>
+                                            <th class="py-3">Dosage</th>
+                                            <th class="py-3">Nurse</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if meds %}
+                                            {% for med in meds %}
+                                            <tr>
+                                                <td class="py-3 text-white-50">{{ med.date }} ({{ med.time }})</td>
+                                                <td class="py-3 fw-bold">{{ med.med_name }}</td>
+                                                <td class="py-3">{{ med.dosage }}</td>
+                                                <td class="py-3 text-white-50">{{ med.nurse }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="4" class="py-5 text-center text-white-50">No medication history recorded.</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🏃 EXERCISE CONTENT -->
+                <div class="tab-pane fade" id="exerciseContent">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="glass-card p-4 h-100">
+                                <h5 class="fw-bold text-white mb-4"><i class="fas fa-notes-medical text-warning me-2"></i> Log Rehab Session</h5>
+                                <form action="/add_exercise" method="POST">
+                                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                    <div class="mb-3">
+                                        <label class="small text-white-50">Exercise Type</label>
+                                        <input type="text" name="exercise_name" class="form-control bg-dark border-0 text-white" placeholder="e.g. Physio Walk" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="small text-white-50">Duration (min)</label>
+                                        <input type="number" name="duration" class="form-control bg-dark border-0 text-white" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="small text-white-50">Professional Observasions</label>
+                                        <textarea name="notes" class="form-control bg-dark border-0 text-white" rows="3"></textarea>
+                                    </div>
+                                    <button class="btn btn-glow w-100">Log Session</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h4 class="fw-bold text-white mb-3">Exercise/Rehab History</h4>
+                            <div class="glass-card p-0 overflow-hidden">
+                                <table class="table table-dark table-hover mb-0 text-center">
+                                    <thead style="background: rgba(124, 160, 135, 0.1);">
+                                        <tr>
+                                            <th class="py-3">Date</th>
+                                            <th class="py-3">Exercise</th>
+                                            <th class="py-3">Duration</th>
+                                            <th class="py-3">Nurse Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if exercises %}
+                                            {% for ex in exercises %}
+                                            <tr>
+                                                <td class="py-3 text-white-50">{{ ex.date }}</td>
+                                                <td class="py-3 fw-bold">{{ ex.exercise_name }}</td>
+                                                <td class="py-3">{{ ex.duration }} mins</td>
+                                                <td class="py-3 text-start small text-white-50 px-4">{{ ex.notes }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="4" class="py-5 text-center text-white-50">No exercise logs found.</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
     </div>
+
+    <style>
+        .nav-tabs .nav-link { color: #ffffff80; transition: all 0.3s ease; }
+        .nav-tabs .nav-link.active { background: #7ca087 !important; color: white !important; }
+        .nav-tabs .nav-link:hover:not(.active) { color: white; background: rgba(255,255,255,0.05); }
+    </style>
 
 </div>
 

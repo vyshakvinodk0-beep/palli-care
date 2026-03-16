@@ -142,6 +142,59 @@ def init_db():
         admin_message TEXT
     )
     """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS item_bookings(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER,
+        caregiver TEXT,
+        booking_date TEXT,
+        status TEXT DEFAULT 'Pending'
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS tutorials(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        link TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS medications(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_id INTEGER,
+        nurse TEXT,
+        med_name TEXT,
+        dosage TEXT,
+        time TEXT,
+        date TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS exercise_logs(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_id INTEGER,
+        nurse TEXT,
+        exercise_name TEXT,
+        duration TEXT,
+        notes TEXT,
+        date TEXT
+    )
+    """)
+
+    # Seed tutorials if empty
+    count = conn.execute("SELECT COUNT(*) FROM tutorials").fetchone()[0]
+    if count == 0:
+        default_videos = [
+            ("How to use Oxygen Cylinder", "https://www.youtube.com/embed/AlWjFyvlDFw"),
+            ("Hospital Bed Adjustment", "https://www.youtube.com/embed/uQH3SigM2bg"),
+            ("Bedsore Prevention", "https://www.youtube.com/embed/_4bL-qIvSas"),
+            ("Changing of urine pad", "https://www.youtube.com/embed/Z1i0dGq0M3g")
+        ]
+        conn.executemany("INSERT INTO tutorials (title, link) VALUES (?, ?)", default_videos)
     
     # Check if 'admin_message' column exists
     cursor = conn.execute("PRAGMA table_info(emergencies)")
@@ -243,8 +296,8 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("u_auth")
+        password = request.form.get("p_auth")
 
         conn = get_db()
         user = conn.execute(
@@ -554,6 +607,8 @@ def nurse_patient_view(id):
     booking = conn.execute("SELECT * FROM booking WHERE id=?", (id,)).fetchone()
     logs = conn.execute("SELECT * FROM patient_logs WHERE caregiver=? ORDER BY id DESC", (booking['caregiver'],)).fetchall()
     notes = conn.execute("SELECT * FROM clinical_notes WHERE booking_id=? ORDER BY id DESC", (id,)).fetchall()
+    meds = conn.execute("SELECT * FROM medications WHERE booking_id=? ORDER BY id DESC", (id,)).fetchall()
+    exercises = conn.execute("SELECT * FROM exercise_logs WHERE booking_id=? ORDER BY id DESC", (id,)).fetchall()
 
     # Prepare data for Chart.js
     import json
@@ -566,10 +621,50 @@ def nurse_patient_view(id):
                            booking=booking, 
                            logs=logs, 
                            notes=notes,
+                           meds=meds,
+                           exercises=exercises,
                            chart_labels=chart_labels,
                            chart_hr=chart_hr,
                            chart_o2=chart_o2,
                            chart_bp=chart_bp)
+
+@app.route("/add_medication", methods=["POST"])
+def add_medication():
+    if session.get("role") != "nurse":
+        return redirect("/login")
+    
+    booking_id = request.form["booking_id"]
+    med_name = request.form["med_name"]
+    dosage = request.form["dosage"]
+    time = request.form["time"]
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    conn = get_db()
+    conn.execute("INSERT INTO medications(booking_id, nurse, med_name, dosage, time, date) VALUES (?, ?, ?, ?, ?, ?)",
+                 (booking_id, session["user"], med_name, dosage, time, current_date))
+    conn.commit()
+    
+    flash("Medication record added ✅", "success")
+    return redirect(f"/nurse_patient_view/{booking_id}")
+
+@app.route("/add_exercise", methods=["POST"])
+def add_exercise():
+    if session.get("role") != "nurse":
+        return redirect("/login")
+    
+    booking_id = request.form["booking_id"]
+    ex_name = request.form["exercise_name"]
+    duration = request.form["duration"]
+    notes = request.form["notes"]
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    conn = get_db()
+    conn.execute("INSERT INTO exercise_logs(booking_id, nurse, exercise_name, duration, notes, date) VALUES (?, ?, ?, ?, ?, ?)",
+                 (booking_id, session["user"], ex_name, duration, notes, current_date))
+    conn.commit()
+    
+    flash("Exercise log recorded ✅", "success")
+    return redirect(f"/nurse_patient_view/{booking_id}")
 
 # ---------------- ADD CLINICAL NOTE (Nurse Only) ----------------
 @app.route("/add_clinical_note", methods=["POST"])
@@ -755,6 +850,22 @@ def finish_item(id):
 
     flash("Item usage marked as finished. Return to pool confirmed ✅", "success")
     return redirect("/caregiver_dashboard")
+
+# ---------------- VIEW ALL ITEM BOOKINGS (Admin Only) ----------------
+@app.route("/view_item_bookings")
+def view_item_bookings():
+    if session.get("role") != "admin":
+        return redirect("/login")
+        
+    conn = get_db()
+    data = conn.execute("""
+        SELECT ib.*, mi.item_name 
+        FROM item_bookings ib 
+        JOIN medical_items mi ON ib.item_id = mi.id
+        ORDER BY ib.status DESC, ib.booking_date DESC
+    """).fetchall()
+    
+    return render_template("admin_item_bookings.html", bookings=data)
 
 # ---------------- ADMIN APPROVALS ----------------
 @app.route("/admin_approvals")
@@ -959,14 +1070,55 @@ def tutorials():
     if "user" not in session:
         return redirect("/login")
 
-    videos = [
-        {"title": "How to use Oxygen Cylinder", "link": "https://www.youtube.com/embed/AlWjFyvlDFw"},
-        {"title": "Hospital Bed Adjustment", "link": "https://www.youtube.com/embed/uQH3SigM2bg"},
-        {"title": "Bedsore Prevention", "link": "https://www.youtube.com/embed/_4bL-qIvSas"},
-        {"title": "Changing of urine pad", "link": "https://www.youtube.com/embed/Z1i0dGq0M3g"}
-    ]
+    conn = get_db()
+    videos = conn.execute("SELECT * FROM tutorials").fetchall()
 
     return render_template("tutorials.html", videos=videos)
+
+# ---------------- MANAGE TUTORIALS (Admin Only) ----------------
+@app.route("/manage_tutorials")
+def manage_tutorials():
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    conn = get_db()
+    videos = conn.execute("SELECT * FROM tutorials").fetchall()
+    return render_template("manage_tutorials.html", videos=videos)
+
+@app.route("/add_tutorial", methods=["POST"])
+def add_tutorial():
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    title = request.form["title"]
+    link = request.form["link"]
+
+    # Convert normal youtube link to embed if needed
+    if "youtube.com/watch?v=" in link:
+        video_id = link.split("v=")[1].split("&")[0]
+        link = f"https://www.youtube.com/embed/{video_id}"
+    elif "youtu.be/" in link:
+        video_id = link.split("youtu.be/")[1].split("?")[0]
+        link = f"https://www.youtube.com/embed/{video_id}"
+
+    conn = get_db()
+    conn.execute("INSERT INTO tutorials (title, link) VALUES (?, ?)", (title, link))
+    conn.commit()
+    
+    flash("New tutorial video added ✅", "success")
+    return redirect("/manage_tutorials")
+
+@app.route("/delete_tutorial/<int:id>")
+def delete_tutorial(id):
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    conn = get_db()
+    conn.execute("DELETE FROM tutorials WHERE id=?", (id,))
+    conn.commit()
+    
+    flash("Tutorial video deleted 🗑️", "success")
+    return redirect("/manage_tutorials")
 
 
 # ---------------- AI SYMPTOMS ----------------

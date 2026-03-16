@@ -1,6 +1,18 @@
+import sqlite3
+import os
 from werkzeug.security import generate_password_hash
 
+DB_PATH = os.path.join('database', 'data.db')
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 def init_db():
+    if not os.path.exists('database'):
+        os.makedirs('database')
+        
     conn = get_db()
 
     conn.execute("""
@@ -8,7 +20,8 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT,
-        role TEXT
+        role TEXT,
+        status TEXT DEFAULT 'Available'
     )
     """)
 
@@ -17,7 +30,26 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         patient_name TEXT,
         service TEXT,
-        caregiver TEXT
+        caregiver TEXT,
+        status TEXT DEFAULT 'Pending'
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS item_bookings(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER,
+        caregiver TEXT,
+        booking_date TEXT,
+        status TEXT DEFAULT 'Pending'
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS tutorials(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        link TEXT
     )
     """)
 
@@ -33,3 +65,7 @@ def init_db():
 
     conn.commit()
     conn.close()
+    print("Database initialized successfully!")
+
+if __name__ == "__main__":
+    init_db()

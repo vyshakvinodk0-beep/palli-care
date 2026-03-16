@@ -21,19 +21,31 @@
         <input type="password" name="fake_password" tabindex="-1" value="">
     </div>
 
-    <!-- ✅ LOGIN FORM -->
-    <form method="POST" autocomplete="off">
+    <!-- ✅ LOGIN FORM (With anti-autofill tricks) -->
+    <form method="POST" autocomplete="off" id="loginForm">
         <div class="mb-3 position-relative">
             <i class="fas fa-user position-absolute top-50 translate-middle-y ms-3 opacity-50"></i>
-            <input class="ps-5" type="text" name="username" placeholder="Username" required autofocus autocomplete="off">
+            <input class="ps-5" type="text" name="u_auth" id="u_auth" placeholder="Username" required 
+                   autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
         </div>
         <div class="mb-4 position-relative">
             <i class="fas fa-lock position-absolute top-50 translate-middle-y ms-3 opacity-50"></i>
-            <input class="ps-5" type="password" name="password" placeholder="Password" required autocomplete="off">
+            <input class="ps-5" type="password" name="p_auth" id="p_auth" placeholder="Password" required 
+                   autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
         </div>
 
         <button class="btn btn-glow w-100 mb-4">LOGIN <i class="fas fa-sign-in-alt ms-2"></i></button>
     </form>
+
+    <script>
+        // Force clear fields on load to defeat aggressive browser caching
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('u_auth').value = '';
+                document.getElementById('p_auth').value = '';
+            }, 10);
+        });
+    </script>
 
     <!-- ✅ LINKS -->
     <div class="text-center mb-3">
