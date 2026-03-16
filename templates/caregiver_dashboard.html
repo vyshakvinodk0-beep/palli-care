@@ -179,6 +179,55 @@
 
     </div>
 
+    <!-- ✅ ACTIVE ITEM BOOKINGS (NEW) -->
+    {% if active_items %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div style="background: rgba(43, 61, 47, 0.85); border-radius: 20px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); backdrop-filter: blur(10px);">
+                <h4 class="text-white fw-bold mb-4">🏠 Currently Borrowed Equipment</h4>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Borrowed On</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in active_items %}
+                            <tr>
+                                <td class="fw-bold text-white">{{ item.item_name }}</td>
+                                <td class="small">{{ item.booking_date }}</td>
+                                <td>
+                                    {% if item.status == 'In Use' %}
+                                        <span class="badge bg-success">In Use</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.status == 'In Use' %}
+                                    <form action="/finish_item/{{ item.id }}" method="POST">
+                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                            Finished Using
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                        <span class="text-white-50 small font-italic">Waiting for approval...</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- ✅ LOWER SECTION: VITALS CHART -->
     <div class="row mt-5">
         <div class="col-12">

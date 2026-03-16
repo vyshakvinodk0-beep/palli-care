@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicare-v4';
+const CACHE_NAME = 'pallicare-v5';
 const ASSETS = [
     '/',
     '/static/css/style.css',

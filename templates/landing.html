@@ -2,95 +2,129 @@
 {% block content %}
 
 <!-- 🌟 HERO -->
-<section class="hero shadow-2xl">
-    <div class="hero-content">
-        <h1 class="hero-title">
+<section class="hero text-center d-flex align-items-center">
+    <div class="container hero-content">
+        <h1 class="hero-title animate-fade-in">
             Compassionate Care,<br>
-            Powered by Intelligence.
+            <span class="text-accent">Powered by Intelligence.</span>
         </h1>
-        <p class="hero-sub mx-auto">
-            Experience the next generation of Palliative Care. Our AI-driven platform connects patients, families, and caregivers with instant support and real-time medical insights.
+        <p class="hero-sub mx-auto max-width-700 mt-4 opacity-75">
+            Empowering patients, families, and caregivers with real-time insights, 
+            intelligent symptom monitoring, and 24/7 compassionate support.
         </p>
         <div class="mt-5 d-flex justify-content-center gap-3">
-            <a href="/login" class="btn btn-glow px-5">Launch App</a>
-            <a href="/signup" class="btn btn-outline px-5">Learn More</a>
+            <a href="/login" class="btn btn-glow px-4 py-3">
+                <i class="fas fa-rocket me-2"></i> Launch Platform
+            </a>
+            <a href="/signup" class="btn btn-outline px-4 py-3">
+                Join our Community <i class="fas fa-arrow-right ms-2"></i>
+            </a>
         </div>
     </div>
 </section>
 
 
 <!-- 🌟 FEATURES -->
-<section class="container py-5">
+<section class="container py-5 mt-5">
     <div class="text-center mb-5">
         <h2 class="display-5 fw-bold text-white mb-3">Smarter Care for Loved Ones</h2>
-        <p class="text-muted mx-auto" style="max-width: 600px;">Our platform streamlines every aspect of palliative care, from real-time monitoring to instant AI-guided support.</p>
+        <div class="divider mx-auto mb-4"></div>
+        <p class="text-light opacity-50 mx-auto max-width-600">
+            Our platform integrates advanced technology with clinical expertise to simplify the complexities of end-of-life care.
+        </p>
     </div>
 
     <div class="row g-4">
         <!-- AI Prediction -->
         <div class="col-md-3">
-            <div class="dashboard-card text-center">
-                <div class="icon">🤖</div>
-                <h5 class="fw-bold mt-2">Early Detection</h5>
-                <p class="small opacity-75">Advanced AI models predict patient symptom severity allowing for proactive intervention.</p>
+            <div class="dashboard-card text-center p-4 h-100">
+                <div class="icon fs-1 mb-3 text-accent"><i class="fas fa-brain"></i></div>
+                <h5 class="fw-bold text-white">Early Detection</h5>
+                <p class="small opacity-75 mb-0">AI models analyze vital signs to predict symptom trends before they escalate.</p>
             </div>
         </div>
 
-        <!-- Nurse -->
+        <!-- Experten -->
         <div class="col-md-3">
-            <div class="dashboard-card text-center">
-                <div class="icon">🧑‍⚕️</div>
-                <h5 class="fw-bold mt-2">Expert Access</h5>
-                <p class="small opacity-75">Instantly check the availability of specialized nurses and healthcare professionals nearby.</p>
+            <div class="dashboard-card text-center p-4 h-100">
+                <div class="icon fs-1 mb-3 text-info"><i class="fas fa-user-md"></i></div>
+                <h5 class="fw-bold text-white">Expert Network</h5>
+                <p class="small opacity-75 mb-0">Real-time availability of verified palliative care specialists and home nurses.</p>
             </div>
         </div>
 
         <!-- Equipment -->
         <div class="col-md-3">
-            <div class="dashboard-card text-center">
-                <div class="icon">🔍</div>
-                <h5 class="fw-bold mt-2">Smart Inventory</h5>
-                <p class="small opacity-75">Real-time tracking of medical equipment availability like oxygen or specialized beds.</p>
+            <div class="dashboard-card text-center p-4 h-100">
+                <div class="icon fs-1 mb-3 text-warning"><i class="fas fa-box-tissue"></i></div>
+                <h5 class="fw-bold text-white">Smart Inventory</h5>
+                <p class="small opacity-75 mb-0">Track and reserve critical medical equipment from local providers instantly.</p>
             </div>
         </div>
 
         <!-- Chatbot -->
         <div class="col-md-3">
-            <div class="dashboard-card text-center">
-                <div class="icon">💬</div>
-                <h5 class="fw-bold mt-2">24/7 Guidance</h5>
-                <p class="small opacity-75">Our medical chatbot provides instant answers to caregiving questions at any time of day.</p>
+            <div class="dashboard-card text-center p-4 h-100">
+                <div class="icon fs-1 mb-3 text-success"><i class="fas fa-comment-dots"></i></div>
+                <h5 class="fw-bold text-white">24/7 Advisor</h5>
+                <p class="small opacity-75 mb-0">Our medical chatbot provides instant, evidence-based caregiving guidance any time.</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- 🌟 HOW IT WORKS -->
-<section class="container py-5 mt-5">
-    <h2 class="text-center display-6 fw-bold text-white mb-5">Getting Started is Simple</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="step-card text-center">
-                <div class="h3 mb-3" style="color: #dcb37b;">01</div>
-                <h5 class="fw-bold text-white">Create Account</h5>
-                <p class="small text-white-50">Join our community as a caregiver or medical professional in seconds.</p>
+<section class="container py-5 my-5">
+    <div class="row align-items-center bg-glass-dark p-5 rounded-4 shadow-lg border border-white border-opacity-10 g-5">
+        <div class="col-lg-6">
+            <h2 class="display-6 fw-bold text-white mb-4">A Simpler Path to Care</h2>
+            <div class="d-flex mb-4">
+                <div class="step-num me-4">01</div>
+                <div>
+                    <h5 class="text-white fw-bold">Secure Registration</h5>
+                    <p class="text-light opacity-50 mb-0">Sign up as a caregiver or professional in under a minute with our verified system.</p>
+                </div>
+            </div>
+            <div class="d-flex mb-4">
+                <div class="step-num me-4">02</div>
+                <div>
+                    <h5 class="text-white fw-bold">Continuous Monitoring</h5>
+                    <p class="text-light opacity-50 mb-0">Log vitals and daily check-ins to build a comprehensive clinical wellbeing profile.</p>
+                </div>
+            </div>
+            <div class="d-flex">
+                <div class="step-num me-4">03</div>
+                <div>
+                    <h5 class="text-white fw-bold">Proactive Intervention</h5>
+                    <p class="text-light opacity-50 mb-0">Receive automated alerts and expert suggestions when changes are detected.</p>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="step-card text-center">
-                <div class="h3 mb-3" style="color: #dcb37b;">02</div>
-                <h5 class="fw-bold text-white">Connect & Log</h5>
-                <p class="small text-white-50">Log daily vitals and wellbeing status to feed our intelligent monitoring AI.</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="step-card text-center">
-                <div class="h3 mb-3" style="color: #dcb37b;">03</div>
-                <h5 class="fw-bold text-white">Receive Insights</h5>
-                <p class="small text-white-50">Get instant medical predictions and alerts whenever support is needed.</p>
+        <div class="col-lg-6 text-center">
+            <div class="p-4 bg-glass p-1 rounded-circle d-inline-block shadow-2xl">
+                <i class="fas fa-heart-pulse text-accent animate-pulse-slow" style="font-size: 10rem;"></i>
             </div>
         </div>
     </div>
 </section>
+
+<style>
+.max-width-700 { max-width: 700px; }
+.max-width-600 { max-width: 600px; }
+.text-accent { color: var(--gold); }
+.divider { width: 60px; height: 3px; background: var(--gold); border-radius: 2px; }
+.bg-glass-dark { background: rgba(0,0,0,0.3); backdrop-filter: blur(20px); }
+.step-num { 
+    background: var(--gold); color: black; width: 45px; height: 45px; 
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+    font-weight: 900; flex-shrink: 0; box-shadow: 0 4px 10px rgba(220,179,123,0.3);
+}
+.animate-pulse-slow { animation: pulse-slow 3s infinite; }
+@keyframes pulse-slow {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+</style>
 
 {% endblock %}

@@ -8,6 +8,7 @@
 <tr>
   <th>Patient</th>
   <th>Service</th>
+  <th>Status</th>
   <th>Action</th>
 </tr>
 
@@ -16,6 +17,15 @@
 
   <td>{{ b.patient_name }}</td>
   <td>{{ b.service }}</td>
+  <td>
+    {% if b.status == 'Pending' %}
+      <span class="badge bg-warning text-dark">Pending</span>
+    {% elif b.status == 'Approved' %}
+      <span class="badge bg-success">Approved</span>
+    {% else %}
+      <span class="badge bg-danger">{{ b.status }}</span>
+    {% endif %}
+  </td>
 
   <td>
       <a href="/delete_booking/{{ b.id }}"
@@ -24,7 +34,6 @@
          Delete
       </a>
   </td>
-
 </tr>
 {% endfor %}
 

@@ -29,7 +29,7 @@
                     <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Item</th>
                     <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Quantity</th>
                     <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Status</th>
-                    {% if session.role == 'admin' %}
+                    {% if session.role in ['admin', 'caregiver'] %}
                     <th scope="col" class="py-3" style="width: 25%; font-weight: bold;">Action</th>
                     {% endif %}
                 </tr>
@@ -39,19 +39,35 @@
                 <tr>
                     <td class="py-4" style="color: #444;">{{ item.item_name }}</td>
                     <td class="py-4" style="color: #444;">{{ item.quantity }}</td>
-                    <td class="py-4" style="color: #444;">{{ item.status }}</td>
+                    <td class="py-4" style="color: #444;">
+                        <span class="badge {% if item.status == 'Available' %}bg-success{% elif item.status == 'Limited' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ item.status }}
+                        </span>
+                    </td>
 
-                    {% if session.role == 'admin' %}
                     <td class="py-4">
+                        {% if session.role == 'admin' %}
                         <a href="/update_item/{{ item.id }}" class="btn text-white rounded-pill px-4 shadow-sm" style="background: #7ca087; font-weight: 600; font-size: 14px;">
                             Update
                         </a>
+                        {% elif session.role == 'caregiver' %}
+                            {% if item.quantity > 0 %}
+                            <form action="/book_item/{{ item.id }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" style="font-weight: 600; font-size: 14px;">
+                                    Book Now
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn btn-secondary rounded-pill px-4 shadow-sm" disabled style="font-weight: 600; font-size: 14px;">
+                                Out of Stock
+                            </button>
+                            {% endif %}
+                        {% endif %}
                     </td>
-                    {% endif %}
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4" class="py-4">No medical items found.</td>
+                    <td colspan="5" class="py-4">No medical items found.</td>
                 </tr>
                 {% endfor %}
             </tbody>

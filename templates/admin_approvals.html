@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="form-title text-white">📑 Pending Approvals</h2>
+        <p class="text-light opacity-75">Review and authorize service and equipment bookings</p>
+    </div>
+
+    <!-- ✅ FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert {% if category == 'success' %}alert-success{% else %}alert-danger{% endif %} text-center mb-4">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row g-5">
+        <!-- 🧑‍⚕️ SERVICE REQUESTS -->
+        <div class="col-md-6">
+            <h4 class="fw-bold text-white mb-4"><i class="fas fa-hand-holding-heart me-2 text-info"></i> Service Requests</h4>
+            <div class="glass-card table-responsive p-0 overflow-hidden" style="border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                <table class="table table-dark table-hover mb-0 text-center">
+                    <thead style="background: rgba(124, 160, 135, 0.2);">
+                        <tr>
+                            <th class="py-3">Patient</th>
+                            <th class="py-3">Service</th>
+                            <th class="py-3">Caregiver</th>
+                            <th class="py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if services %}
+                            {% for s in services %}
+                            <tr class="align-middle">
+                                <td class="py-3 fw-bold text-white">{{ s.patient_name }}</td>
+                                <td class="py-3"><span class="badge bg-outline-info border border-info rounded-pill px-3">{{ s.service }}</span></td>
+                                <td class="py-3 small text-white-50">{{ s.caregiver }}</td>
+                                <td class="py-3 px-3">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="/approve_service/{{ s.id }}" class="btn btn-sm btn-success rounded-pill px-3" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="/reject_service/{{ s.id }}" class="btn btn-sm btn-danger rounded-pill px-3" title="Reject" onclick="return confirm('Reject this service booking?')">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="py-5 text-white-50">No pending service requests.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 🩺 EQUIPMENT REQUESTS -->
+        <div class="col-md-6">
+            <h4 class="fw-bold text-white mb-4"><i class="fas fa-wheelchair me-2 text-warning"></i> Equipment Requests</h4>
+            <div class="glass-card table-responsive p-0 overflow-hidden" style="border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                <table class="table table-dark table-hover mb-0 text-center">
+                    <thead style="background: rgba(220, 179, 123, 0.2);">
+                        <tr>
+                            <th class="py-3">Item</th>
+                            <th class="py-3">Date</th>
+                            <th class="py-3">Caregiver</th>
+                            <th class="py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if items %}
+                            {% for i in items %}
+                            <tr class="align-middle">
+                                <td class="py-3 fw-bold text-white">{{ i.item_name }}</td>
+                                <td class="py-3 small">{{ i.booking_date }}</td>
+                                <td class="py-3 small text-white-50">{{ i.caregiver }}</td>
+                                <td class="py-3 px-3">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="/approve_item/{{ i.id }}" class="btn btn-sm btn-success rounded-pill px-3" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="/reject_item/{{ i.id }}" class="btn btn-sm btn-danger rounded-pill px-3" title="Reject" onclick="return confirm('Reject this equipment booking?')">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="py-5 text-white-50">No pending equipment requests.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="/admin_dashboard" class="btn btn-outline-light rounded-pill px-5">
+            <i class="fas fa-arrow-left me-2"></i> Back to Control Panel
+        </a>
+    </div>
+</div>
+
+{% endblock %}

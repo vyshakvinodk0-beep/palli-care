@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, session, flash, send_from_directory
-from datetime import timedelta
 import sqlite3
 import os
 import pickle
+from datetime import timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "palliative"
@@ -43,15 +44,28 @@ else:
 
 
 # ---------------- DB CONNECTION ----------------
+from flask import g
+
 def get_db():
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
-    return conn
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB, timeout=20)
+        g.db.row_factory = sqlite3.Row
+        # Enable WAL mode for better concurrency
+        g.db.execute("PRAGMA journal_mode=WAL")
+    return g.db
+
+@app.teardown_appcontext
+def close_db(error):
+    if hasattr(g, 'db'):
+        g.db.close()
 
 
 # ---------------- DB INIT ----------------
 def init_db():
-    conn = get_db()
+    # Use a separate connection for initialization as it might run outside app context
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row # Ensure row_factory is set for init_db as well
+    conn.execute("PRAGMA journal_mode=WAL")
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS users(
@@ -74,9 +88,16 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         patient_name TEXT,
         service TEXT,
-        caregiver TEXT
+        caregiver TEXT,
+        status TEXT DEFAULT 'Pending'
     )
     """)
+
+    # Migration for existing booking table
+    cursor = conn.execute("PRAGMA table_info(booking)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if 'status' not in columns:
+        conn.execute("ALTER TABLE booking ADD COLUMN status TEXT DEFAULT 'Approved'") # Existing ones approved
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS patient_logs(
@@ -129,10 +150,13 @@ def init_db():
         conn.execute("ALTER TABLE emergencies ADD COLUMN admin_message TEXT")
 
 
+    # ✅ Create default admin if not exists
     admin = conn.execute("SELECT * FROM users WHERE role='admin'").fetchone()
     if not admin:
+        hashed_pw = generate_password_hash("admin123")
         conn.execute(
-            "INSERT INTO users(username,password,role) VALUES ('admin','admin','admin')"
+            "INSERT INTO users(username,password,role) VALUES ('admin',?,'admin')",
+            (hashed_pw,)
         )
 
     conn.execute("""
@@ -142,6 +166,17 @@ def init_db():
         driver TEXT,
         phone TEXT,
         status TEXT DEFAULT 'Available'
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS item_bookings(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER,
+        caregiver TEXT,
+        booking_date TEXT,
+        status TEXT DEFAULT 'In Use', -- 'In Use', 'Finished'
+        FOREIGN KEY(item_id) REFERENCES medical_items(id)
     )
     """)
 
@@ -186,12 +221,12 @@ def signup():
     if request.method == "POST":
         try:
             conn = get_db()
+            hashed_password = generate_password_hash(request.form["password"])
             conn.execute(
                 "INSERT INTO users(username,password,role) VALUES (?,?,?)",
-                (request.form["username"], request.form["password"], request.form["role"])
+                (request.form["username"], hashed_password, request.form["role"])
             )
             conn.commit()
-            conn.close()
 
             flash("Account created successfully ✅ Please login", "success")
             return redirect("/login")
@@ -215,14 +250,9 @@ def login():
         user = conn.execute(
             "SELECT * FROM users WHERE username=?", (username,)
         ).fetchone()
-        conn.close()
 
-        if not user:
-            flash("Invalid username ❌", "danger")
-            return redirect("/login")
-
-        if user["password"] != password:
-            flash("Wrong password ❌", "danger")
+        if not user or not check_password_hash(user["password"], password):
+            flash("Invalid credentials ❌", "danger")
             return redirect("/login")
 
         session.clear()
@@ -260,13 +290,12 @@ def forgot_password():
         ).fetchone()
 
         if not user:
-            conn.close()
             flash("Username not found ❌", "danger")
             return redirect("/forgot_password")
 
-        conn.execute("UPDATE users SET password=? WHERE username=?", (new_password, username))
+        hashed_password = generate_password_hash(new_password)
+        conn.execute("UPDATE users SET password=? WHERE username=?", (hashed_password, username))
         conn.commit()
-        conn.close()
 
         flash("Password reset successfully ✅ Please login", "success")
         return redirect("/login")
@@ -283,9 +312,14 @@ def admin_dashboard():
     conn = get_db()
     users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
     bookings = conn.execute("SELECT COUNT(*) FROM booking").fetchone()[0]
-    conn.close()
-
-    return render_template("admin_dashboard.html", users=users, bookings=bookings)
+    pending_services = conn.execute("SELECT COUNT(*) FROM booking WHERE status='Pending'").fetchone()[0]
+    pending_items = conn.execute("SELECT COUNT(*) FROM item_bookings WHERE status='Pending'").fetchone()[0]
+    
+    return render_template("admin_dashboard.html", 
+                           users=users, 
+                           bookings=bookings,
+                           pending_services=pending_services, 
+                           pending_items=pending_items)
 
 from flask import jsonify
 from datetime import datetime
@@ -298,7 +332,6 @@ def check_sos():
         
     conn = get_db()
     active_sos = conn.execute("SELECT * FROM emergencies WHERE status='Active' ORDER BY id DESC").fetchall()
-    conn.close()
     
     if active_sos:
         return jsonify({"status": "active", "emergencies": [dict(e) for e in active_sos]})
@@ -315,7 +348,6 @@ def resolve_sos(id):
     conn = get_db()
     conn.execute("UPDATE emergencies SET status='Resolved', admin_message=? WHERE id=?", (admin_message, id))
     conn.commit()
-    conn.close()
     
     flash("Emergency marked as resolved and message sent to Caregiver ✅", "success")
     return redirect("/admin_dashboard")
@@ -330,7 +362,6 @@ def trigger_sos():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn.execute("INSERT INTO emergencies (caregiver, time, status) VALUES (?, ?, 'Active')", (session["user"], current_time))
     conn.commit()
-    conn.close()
     
     flash("EMERGENCY SOS TRIGGERED! Admin has been notified. 🚨", "danger")
     return redirect("/caregiver_dashboard")
@@ -342,12 +373,10 @@ def check_sos_status():
         return jsonify({"status": "error"})
         
     conn = get_db()
-    # Find the most recently resolved SOS for this caregiver that has a message
     last_resolved = conn.execute(
         "SELECT * FROM emergencies WHERE caregiver=? AND status='Resolved' AND admin_message IS NOT NULL AND admin_message != '' ORDER BY id DESC LIMIT 1",
         (session["user"],)
     ).fetchone()
-    conn.close()
     
     if last_resolved:
         return jsonify({"has_message": True, "message": last_resolved["admin_message"]})
@@ -366,7 +395,6 @@ def dismiss_sos_message():
         (session["user"],)
     )
     conn.commit()
-    conn.close()
     return jsonify({"status": "success"})
 
 # ---------------- MANAGE USERS (Admin Only) ----------------
@@ -377,7 +405,6 @@ def manage_users():
 
     conn = get_db()
     users = conn.execute("SELECT id, username, role FROM users WHERE role != 'admin'").fetchall()
-    conn.close()
 
     return render_template("admin_manage_users.html", users=users)
 
@@ -390,7 +417,6 @@ def delete_user(id):
     conn = get_db()
     conn.execute("DELETE FROM users WHERE id=?", (id,))
     conn.commit()
-    conn.close()
 
     flash("User deleted successfully 🗑️", "success")
     return redirect("/manage_users")
@@ -405,16 +431,13 @@ def edit_user(id):
     if request.method == "POST":
         username = request.form["username"]
         role = request.form["role"]
-        
         conn.execute("UPDATE users SET username=?, role=? WHERE id=?", (username, role, id))
         conn.commit()
-        conn.close()
         
         flash("User updated successfully ✅", "success")
         return redirect("/manage_users")
         
     user = conn.execute("SELECT * FROM users WHERE id=?", (id,)).fetchone()
-    conn.close()
     
     return render_template("edit_user.html", user=user)
 
@@ -440,9 +463,15 @@ def caregiver_dashboard():
         "SELECT * FROM patient_logs WHERE caregiver=? ORDER BY id DESC LIMIT 7",
         (session["user"],)
     ).fetchall()
-    conn.close()
 
     recent_logs = list(reversed(recent_logs))
+    
+    active_items = conn.execute("""
+        SELECT ib.id, mi.item_name, ib.booking_date, ib.status 
+        FROM item_bookings ib 
+        JOIN medical_items mi ON ib.item_id = mi.id
+        WHERE ib.caregiver = ? AND ib.status IN ('In Use', 'Pending')
+    """, (session["user"],)).fetchall()
     
     mood_icons = {"Happy": "😊", "Neutral": "😐", "Sad": "😔", "Anxious": "😟", "In Pain": "😫"}
     sleep_icons = {"Sound": "💤", "Restless": "🛏️", "Interrupted": "🕰️", "Minimal": "😵"}
@@ -471,7 +500,8 @@ def caregiver_dashboard():
         chart_labels=chart_labels,
         chart_hr=chart_hr,
         chart_o2=chart_o2,
-        chart_bp=chart_bp
+        chart_bp=chart_bp,
+        active_items=active_items
     )
 
 from datetime import date
@@ -497,11 +527,7 @@ def update_stats():
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (session["user"], today, comfort, mood, sleep, tasks, hr, o2, bp))
     conn.commit()
-    conn.close()
     
-    flash("Daily stats successfully logged! 📝", "success")
-    return redirect("/caregiver_dashboard")
-
     flash("Daily stats successfully logged! 📝", "success")
     return redirect("/caregiver_dashboard")
 
@@ -513,12 +539,8 @@ def nurse_dashboard():
         return redirect("/login")
 
     conn = get_db()
-    # List all patients who have bookings
-    assigned_bookings = conn.execute("SELECT * FROM booking").fetchall()
-    
-    # Get nurse status
+    assigned_bookings = conn.execute("SELECT * FROM booking WHERE status='Approved'").fetchall()
     status = conn.execute("SELECT status FROM users WHERE username=?", (session["user"],)).fetchone()[0]
-    conn.close()
 
     return render_template("nurse_dashboard.html", bookings=assigned_bookings, status=status)
 
@@ -530,13 +552,8 @@ def nurse_patient_view(id):
 
     conn = get_db()
     booking = conn.execute("SELECT * FROM booking WHERE id=?", (id,)).fetchone()
-    
-    # Get logs from the caregiver of this patient
     logs = conn.execute("SELECT * FROM patient_logs WHERE caregiver=? ORDER BY id DESC", (booking['caregiver'],)).fetchall()
-    
-    # Get clinical notes already written
     notes = conn.execute("SELECT * FROM clinical_notes WHERE booking_id=? ORDER BY id DESC", (id,)).fetchall()
-    conn.close()
 
     # Prepare data for Chart.js
     import json
@@ -568,7 +585,6 @@ def add_clinical_note():
     conn.execute("INSERT INTO clinical_notes(booking_id, nurse, note, date) VALUES (?, ?, ?, ?)",
                  (booking_id, session["user"], note_text, today))
     conn.commit()
-    conn.close()
 
     flash("Clinical note added 🏥", "success")
     return redirect(f"/nurse_patient_view/{booking_id}")
@@ -582,7 +598,6 @@ def toggle_status():
     conn = get_db()
     user = conn.execute("SELECT status FROM users WHERE username=?", (session["user"],)).fetchone()
     if not user:
-        conn.close()
         return redirect("/login")
         
     current = user[0]
@@ -590,7 +605,7 @@ def toggle_status():
     
     conn.execute("UPDATE users SET status=? WHERE username=?", (new_status, session["user"]))
     conn.commit()
-    conn.close()
+    # Flash and redirect
 
     flash(f"Status updated to: {new_status} ✅", "info")
     return redirect("/nurse_dashboard")
@@ -607,7 +622,6 @@ def nurse_availability():
     nurses = conn.execute(
         "SELECT username, status FROM users WHERE role='nurse'"
     ).fetchall()
-    conn.close()
 
     return render_template("nurse_availability.html", nurses=nurses)
 
@@ -626,13 +640,12 @@ def booking():
 
         conn = get_db()
         conn.execute(
-            "INSERT INTO booking(patient_name, service, caregiver) VALUES (?, ?, ?)",
+            "INSERT INTO booking(patient_name, service, caregiver, status) VALUES (?, ?, ?, 'Pending')",
             (patient, service, session["user"])
         )
         conn.commit()
-        conn.close()
 
-        flash("Booking successful ✅", "success")
+        flash("Booking request sent! Waiting for Admin approval ⏳", "success")
         return redirect("/caregiver_dashboard")
 
     return render_template("booking.html")
@@ -650,7 +663,6 @@ def view_bookings():
         "SELECT * FROM booking WHERE caregiver=?",
         (session["user"],)
     ).fetchall()
-    conn.close()
 
     return render_template("view_bookings.html", bookings=data)
 
@@ -662,7 +674,6 @@ def view_all_bookings():
         
     conn = get_db()
     data = conn.execute("SELECT * FROM booking").fetchall()
-    conn.close()
     
     return render_template("admin_view_bookings.html", bookings=data)
 
@@ -675,18 +686,147 @@ def delete_booking(id):
         return redirect("/login")
 
     conn = get_db()
-
     conn.execute("""
         DELETE FROM booking
         WHERE id=? AND caregiver=?
     """, (id, session["user"]))
 
     conn.commit()
-    conn.close()
 
     flash("Booking deleted 🗑️", "success")
     return redirect("/view_bookings")
 
+
+# ---------------- ITEM BOOKING (Caregiver Only) ----------------
+@app.route("/book_item/<int:id>", methods=["POST"])
+def book_item(id):
+    if session.get("role") != "caregiver":
+        return redirect("/login")
+
+    conn = get_db()
+    item = conn.execute("SELECT * FROM medical_items WHERE id=?", (id,)).fetchone()
+    
+    if not item or item["quantity"] <= 0:
+        flash("Sorry, this item is currently unavailable ❌", "danger")
+        return redirect("/medical_items")
+
+    # Decrease quantity
+    conn.execute("UPDATE medical_items SET quantity = quantity - 1 WHERE id=?", (id,))
+    
+    # Update status if quantity becomes 0
+    if item["quantity"] - 1 == 0:
+        conn.execute("UPDATE medical_items SET status = 'Out of Stock' WHERE id=?", (id,))
+
+    # Create booking record with Pending status
+    booking_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+    conn.execute(
+        "INSERT INTO item_bookings(item_id, caregiver, booking_date, status) VALUES (?, ?, ?, 'Pending')",
+        (id, session["user"], booking_date)
+    )
+    conn.commit()
+
+    flash(f"Request for {item['item_name']} sent! Waiting for admin approval ⏳", "success")
+    return redirect("/medical_items")
+
+# ---------------- FINISH ITEM USAGE (Caregiver Only) ----------------
+@app.route("/finish_item/<int:id>", methods=["POST"])
+def finish_item(id):
+    if session.get("role") != "caregiver":
+        return redirect("/login")
+
+    conn = get_db()
+    booking = conn.execute("SELECT * FROM item_bookings WHERE id=? AND caregiver=?", (id, session["user"])).fetchone()
+    
+    if not booking:
+        return redirect("/caregiver_dashboard")
+
+    # Update booking status
+    conn.execute("UPDATE item_bookings SET status = 'Finished' WHERE id=?", (id,))
+    
+    # Increase inventory quantity
+    conn.execute("UPDATE medical_items SET quantity = quantity + 1 WHERE id=?", (booking["item_id"],))
+    
+    # Update inventory status if it was Out of Stock
+    item = conn.execute("SELECT * FROM medical_items WHERE id=?", (booking["item_id"],)).fetchone()
+    if item["status"] == "Out of Stock":
+        conn.execute("UPDATE medical_items SET status = 'Available' WHERE id=?", (booking["item_id"],))
+
+    conn.commit()
+
+    flash("Item usage marked as finished. Return to pool confirmed ✅", "success")
+    return redirect("/caregiver_dashboard")
+
+# ---------------- ADMIN APPROVALS ----------------
+@app.route("/admin_approvals")
+def admin_approvals():
+    if session.get("role") != "admin":
+        return redirect("/login")
+
+    conn = get_db()
+    services = conn.execute("SELECT * FROM booking WHERE status='Pending'").fetchall()
+    items = conn.execute("""
+        SELECT ib.*, mi.item_name 
+        FROM item_bookings ib 
+        JOIN medical_items mi ON ib.item_id = mi.id 
+        WHERE ib.status='Pending'
+    """).fetchall()
+
+    return render_template("admin_approvals.html", services=services, items=items)
+
+@app.route("/approve_service/<int:id>")
+def approve_service(id):
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    conn = get_db()
+    conn.execute("UPDATE booking SET status='Approved' WHERE id=?", (id,))
+    conn.commit()
+    flash("Service booking approved ✅", "success")
+    return redirect("/admin_approvals")
+
+@app.route("/reject_service/<int:id>")
+def reject_service(id):
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    conn = get_db()
+    conn.execute("UPDATE booking SET status='Rejected' WHERE id=?", (id,))
+    conn.commit()
+    flash("Service booking rejected ❌", "danger")
+    return redirect("/admin_approvals")
+
+@app.route("/approve_item/<int:id>")
+def approve_item(id):
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    conn = get_db()
+    conn.execute("UPDATE item_bookings SET status='In Use' WHERE id=?", (id,))
+    conn.commit()
+    flash("Equipment booking approved ✅", "success")
+    return redirect("/admin_approvals")
+
+@app.route("/reject_item/<int:id>")
+def reject_item(id):
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    conn = get_db()
+    booking = conn.execute("SELECT * FROM item_bookings WHERE id=?", (id,)).fetchone()
+    if booking:
+        # Return quantity to inventory
+        conn.execute("UPDATE medical_items SET quantity = quantity + 1 WHERE id=?", (booking["item_id"],))
+        
+        # Update inventory status if it was Out of Stock
+        item = conn.execute("SELECT * FROM medical_items WHERE id=?", (booking["item_id"],)).fetchone()
+        if item and item["status"] == "Out of Stock":
+            conn.execute("UPDATE medical_items SET status = 'Available' WHERE id=?", (booking["item_id"],))
+            
+        conn.execute("UPDATE item_bookings SET status='Rejected' WHERE id=?", (id,))
+        conn.commit()
+    
+    flash("Equipment booking rejected and item returned to pool ❌", "danger")
+    return redirect("/admin_approvals")
 
 # ---------------- MEDICAL ITEMS ----------------
 @app.route("/medical_items")
@@ -697,7 +837,6 @@ def medical_items():
 
     conn = get_db()
     items = conn.execute("SELECT * FROM medical_items").fetchall()
-    conn.close()
 
     return render_template("medical_items.html", items=items)
 
@@ -707,21 +846,18 @@ def update_item(id):
     if session.get("role") != "admin":
         return redirect("/medical_items")
 
+    conn = get_db()
     if request.method == "POST":
         quantity = request.form["quantity"]
         status = request.form["status"]
         
-        conn = get_db()
         conn.execute("UPDATE medical_items SET quantity=?, status=? WHERE id=?", (quantity, status, id))
         conn.commit()
-        conn.close()
         
         flash("Medical item updated successfully ✅", "success")
         return redirect("/medical_items")
         
-    conn = get_db()
     item = conn.execute("SELECT * FROM medical_items WHERE id=?", (id,)).fetchone()
-    conn.close()
     
     return render_template("update_item.html", item=item)
 
@@ -738,7 +874,6 @@ def add_item():
     conn = get_db()
     conn.execute("INSERT INTO medical_items(item_name, quantity, status) VALUES (?,?,?)", (name, qty, status))
     conn.commit()
-    conn.close()
 
     flash("New equipment added 📦", "success")
     return redirect("/medical_items")
@@ -752,7 +887,6 @@ def admin_delete_booking(id):
     conn = get_db()
     conn.execute("DELETE FROM booking WHERE id=?", (id,))
     conn.commit()
-    conn.close()
 
     flash("Booking removed by admin 🗑️", "success")
     return redirect("/view_all_bookings")
@@ -767,7 +901,6 @@ def ambulance():
 
     conn = get_db()
     ambulances = conn.execute("SELECT * FROM ambulances").fetchall()
-    conn.close()
 
     return render_template("ambulance.html", ambulances=ambulances)
 
@@ -779,7 +912,6 @@ def manage_ambulances():
 
     conn = get_db()
     ambulances = conn.execute("SELECT * FROM ambulances").fetchall()
-    conn.close()
 
     return render_template("admin_manage_ambulances.html", ambulances=ambulances)
 
@@ -796,7 +928,6 @@ def update_ambulance(id):
     conn = get_db()
     conn.execute("UPDATE ambulances SET status=?, driver=?, phone=? WHERE id=?", (status, driver, phone, id))
     conn.commit()
-    conn.close()
 
     flash("Ambulance stats updated successfully ✅", "success")
     return redirect("/manage_ambulances")

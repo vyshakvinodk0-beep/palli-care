@@ -1,55 +1,105 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container py-5 text-center text-white">
+<div class="container py-5">
 
-<h2 class="mb-5">👑 Admin Dashboard</h2>
+    <div class="text-center mb-5">
+        <h2 class="form-title">👑 Admin Control Panel</h2>
+        <p class="text-light opacity-75">Platform Management & Emergency Oversight</p>
+    </div>
+    
+    <!-- ✅ PENDING APPROVALS NOTIFICATION -->
+    {% if pending_services > 0 or pending_items > 0 %}
+    <div class="alert alert-warning border-warning border-opacity-25 py-4 mb-5 shadow-lg d-flex align-items-center justify-content-between px-5" style="background: rgba(43, 40, 30, 0.9); border-radius: 20px;">
+        <div class="d-flex align-items-center gap-4">
+            <div class="fs-1"><i class="fas fa-hourglass-half text-warning animate-spin-slow"></i></div>
+            <div class="text-start">
+                <h4 class="fw-bold text-white mb-1">Pending Approvals</h4>
+                <p class="mb-0 text-light opacity-75">
+                    You have <b>{{ pending_services }}</b> service requests and <b>{{ pending_items }}</b> equipment requests waiting.
+                </p>
+            </div>
+        </div>
+        <a href="/admin_approvals" class="btn btn-warning fw-bold px-4 py-3 rounded-pill">REVIEW NOW <i class="fas fa-arrow-right ms-2"></i></a>
+    </div>
+    <style>
+        .animate-spin-slow { animation: fa-spin 5s infinite linear; }
+    </style>
+    {% endif %}
 
-<!-- ✅ EMERGENCY SOS BANNER CONTAINER -->
-<div id="sosContainer" class="d-none text-center fw-bold mt-4 mb-5 mx-auto" style="max-width: 900px; background-color: #fce8e8; color: #a11e22; border-radius: 8px; font-size: 18px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #a11e22; animation: blinker 1s linear infinite;">
-    <div>🚨 <span id="sosMessage">ACTIVE SOS EMERGENCY FROM CAREGIVER! REVIEW IMMEDIATELY.</span> 🚨</div>
-    <form id="sosForm" method="POST" action="" class="mt-3">
-        <input type="text" name="admin_message" class="form-control form-control-sm mb-3 w-75 mx-auto" style="border: 2px solid rgba(220, 53, 69, 0.5);" placeholder="Enter message to Caregiver for resolution..." required>
-        <button type="submit" class="btn btn-danger btn-sm px-4 fw-bold">RESOLVE & SEND MESSAGE</button>
-    </form>
-</div>
+    <!-- ✅ EMERGENCY SOS BANNER CONTAINER -->
+    <div id="sosContainer" class="d-none alert alert-danger border-danger border-2 text-center py-4 mb-5 shadow-lg animate-pulse" style="background: rgba(45, 10, 10, 0.95); border-radius: 20px;">
+        <h3 class="fw-bold text-white mb-3">🚨 EMERGENCY SOS ACTIVE 🚨</h3>
+        <p class="text-danger fw-bold fs-5 mb-4" id="sosMessage"></p>
+        
+        <form id="sosForm" method="POST" action="" class="max-width-600 mx-auto">
+            <div class="mb-3">
+                <input type="text" name="admin_message" class="form-control text-center py-3" placeholder="Enter resolution message for caregiver..." required>
+            </div>
+            <button type="submit" class="btn btn-danger btn-lg px-5">RESOLVE & DISPATCH HELP</button>
+        </form>
+    </div>
 
-<style>
-@keyframes blinker {
-  50% { opacity: 0; }
-}
-</style>
+    <style>
+    .animate-pulse { animation: sos-pulse 1.5s infinite; }
+    @keyframes sos-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+        70% { box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+    </style>
 
-<!-- Audio element for siren -->
-<!-- Using a standard notification sound, but looping it like an alarm -->
-<audio id="sosAlarm" loop>
-    <source src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3" type="audio/mpeg">
-</audio>
+    <!-- Audio element for siren -->
+    <audio id="sosAlarm" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3" type="audio/mpeg">
+    </audio>
 
-<div class="row g-4 mx-auto mb-5" style="max-width: 900px;">
+    <!-- ✅ STATS SECTION -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="dashboard-card text-center py-5">
+                <div class="icon fs-1 opacity-50 mb-3"><i class="fas fa-users"></i></div>
+                <h5 class="text-light opacity-75">Total Users registered</h5>
+                <h2 class="display-4 fw-bold text-white">{{ users }}</h2>
+            </div>
+        </div>
 
-    <div class="col-md-6">
-        <div class="text-center" style="background: rgba(43, 61, 47, 0.95); border-radius: 15px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-            <h5 class="fw-bold text-white mb-3">Total Users</h5>
-            <h2 class="fw-bold text-white" style="font-size: 2.5rem;">{{ users }}</h2>
+        <div class="col-md-6">
+            <div class="dashboard-card text-center py-5">
+                <div class="icon fs-1 opacity-50 mb-3"><i class="fas fa-calendar-check"></i></div>
+                <h5 class="text-light opacity-75">Total Active Bookings</h5>
+                <h2 class="display-4 fw-bold text-white">{{ bookings }}</h2>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="text-center" style="background: rgba(43, 61, 47, 0.95); border-radius: 15px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-            <h5 class="fw-bold text-white mb-3">Total Bookings</h5>
-            <h2 class="fw-bold text-white" style="font-size: 2.5rem;">{{ bookings }}</h2>
+    <!-- ✅ QUICK ACTIONS -->
+    <div class="row g-4 justify-content-center">
+        <div class="col-6 col-md-3">
+            <a href="/view_all_bookings" class="dashboard-card text-center p-4 d-block text-decoration-none">
+                <div class="icon mb-3"><i class="fas fa-list-alt fs-2"></i></div>
+                <h6 class="text-white mb-0">View All Bookings</h6>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="/manage_users" class="dashboard-card text-center p-4 d-block text-decoration-none">
+                <div class="icon mb-3"><i class="fas fa-user-cog fs-2"></i></div>
+                <h6 class="text-white mb-0">Manage Users</h6>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="/view_item_bookings" class="dashboard-card text-center p-4 d-block text-decoration-none">
+                <div class="icon mb-3"><i class="fas fa-history fs-2"></i></div>
+                <h6 class="text-white mb-0">Equipment Tracker</h6>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="/manage_ambulances" class="dashboard-card text-center p-4 d-block text-decoration-none">
+                <div class="icon mb-3"><i class="fas fa-ambulance fs-2"></i></div>
+                <h6 class="text-white mb-0">Ambulance Fleet</h6>
+            </a>
         </div>
     </div>
-
-</div>
-
-<div class="d-flex justify-content-center gap-4 flex-wrap mx-auto" style="max-width: 900px;">
-    <a href="/view_all_bookings" class="btn text-dark fw-bold" style="background: linear-gradient(to bottom, #f3d4a6, #dfb47c); border-radius: 30px; padding: 15px 30px; font-size: 14px; letter-spacing: 1px; width: 260px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">VIEW BOOKINGS</a>
-    <a href="/manage_users" class="btn text-dark fw-bold" style="background: linear-gradient(to bottom, #e2c08d, #ce9e61); border-radius: 30px; padding: 15px 30px; font-size: 14px; letter-spacing: 1px; width: 260px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">MANAGE USERS</a>
-    <a href="/medical_items" class="btn text-dark fw-bold" style="background: linear-gradient(to bottom, #dcb37b, #c69450); border-radius: 30px; padding: 15px 30px; font-size: 14px; letter-spacing: 1px; width: 260px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">MANAGE INVENTORY</a>
-    <a href="/manage_ambulances" class="btn text-dark fw-bold mt-2" style="background: linear-gradient(to bottom, #c69450, #b58d55); border-radius: 30px; padding: 15px 30px; font-size: 14px; letter-spacing: 1px; width: 260px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">MANAGE AMBULANCES</a>
-</div>
 
 </div>
 

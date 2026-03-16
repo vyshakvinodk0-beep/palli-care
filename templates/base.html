@@ -19,9 +19,11 @@
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- 📱 PWA Manifest & iOS Support -->
     <link rel="manifest" href="/manifest.json">
@@ -37,60 +39,115 @@
 
 <!-- 🌟 ULTRA PREMIUM NAVBAR -->
 <nav class="navbar navbar-expand-lg premium-navbar fixed-top">
-    <div class="container">
+    <div class="container-fluid px-lg-5">
 
         <!-- 🌟 LOGO -->
         <a class="navbar-brand brand-logo" href="/">
-            <span class="heart">❤</span>
+            <span class="heart"><i class="fas fa-heart"></i></span>
             <span class="brand-text">AI Palliative Care</span>
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse justify-content-end" id="navMenu">
 
-            {% if session.get("user") %}
+            <div class="navbar-nav align-items-lg-center">
+                {% if session.get("user") %}
+                    <!-- 🌐 ROLE BASED MENU -->
+                    {% if session["role"] == "caregiver" %}
+                        <a href="/caregiver_dashboard" class="nav-link">Dashboard</a>
+                    {% elif session["role"] == "admin" %}
+                        <a href="/admin_dashboard" class="nav-link">Admin Panel</a>
+                    {% elif session["role"] == "nurse" %}
+                        <a href="/nurse_dashboard" class="nav-link">Nurse Hub</a>
+                    {% endif %}
 
-                <!-- 🌐 ROLE BASED MENU -->
-                {% if session["role"] == "caregiver" %}
-                    <a href="/caregiver_dashboard" class="nav-link">Dashboard</a>
-                {% elif session["role"] == "admin" %}
-                    <a href="/admin_dashboard" class="nav-link">Admin</a>
-                {% elif session["role"] == "nurse" %}
-                    <a href="/nurse_dashboard" class="nav-link">Nurse</a>
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/tutorials" class="nav-link">Tutorials</a>
+
+                    <!-- 👤 USER BADGE -->
+                    <span class="user-badge mb-2 mb-lg-0">
+                        <i class="fas fa-user-circle me-1"></i> {{ session["user"] }}
+                    </span>
+
+                    <a href="/logout" class="btn btn-logout ms-lg-3">Logout</a>
+
+                    <!-- 📱 MANUAL INSTALL BUTTON -->
+                    <button id="installBtn" class="btn btn-outline ms-lg-2 d-none" style="padding: 5px 15px; font-size: 0.8rem;">
+                        <i class="fas fa-download me-1"></i> Install
+                    </button>
+
+                {% else %}
+                    <a href="/" class="nav-link me-lg-3">Home</a>
+                    <a href="/login" class="btn btn-outline me-lg-2 mb-2 mb-lg-0">Login</a>
+                    <a href="/signup" class="btn btn-glow">Get Started</a>
                 {% endif %}
-
-                <a href="/" class="nav-link">Home</a>
-                <a href="/tutorials" class="nav-link">Tutorials</a>
-
-                <!-- 👤 USER BADGE -->
-                <span class="user-badge">
-                    👤 {{ session["user"] }}
-                </span>
-
-                <a href="/logout" class="btn btn-logout ms-3">Logout</a>
-
-                <!-- 📱 MANUAL INSTALL BUTTON -->
-                <button id="installBtn" class="btn btn-outline-warning ms-2 d-none" style="border-radius: 20px; font-size: 11px; padding: 5px 15px;">📲 Install App</button>
-
-            {% else %}
-
-                <a href="/login" class="btn btn-login me-2">Login</a>
-                <a href="/signup" class="btn btn-signup">Signup</a>
-
-            {% endif %}
+            </div>
 
         </div>
     </div>
 </nav>
 
 
-<!-- ✅ PAGE CONTENT (padding for fixed navbar) -->
-<div id="main-content" class="container py-5 page-transition" style="padding-top: 130px !important;">
+<!-- ✅ PAGE CONTENT -->
+<main id="main-content" class="container-fluid page-transition" style="min-height: 80vh;">
     {% block content %}{% endblock %}
-</div>
+</main>
+
+
+<!-- 🌟 PREMIUM FOOTER -->
+<footer class="premium-footer">
+    <div class="footer-grid">
+        <div class="footer-brand">
+            <a class="brand-logo" href="/">
+                <span class="heart"><i class="fas fa-heart"></i></span>
+                <span class="brand-text">AI Palliative Care</span>
+            </a>
+            <p class="footer-desc mt-3">
+                Revolutionizing end-of-life care through intelligent monitoring and compassionate AI support.
+            </p>
+            <div class="social-links mt-4 d-flex gap-3">
+                <a href="#"><i class="fab fa-twitter h5"></i></a>
+                <a href="#"><i class="fab fa-linkedin h5"></i></a>
+                <a href="#"><i class="fab fa-facebook h5"></i></a>
+            </div>
+        </div>
+        
+        <div class="footer-nav">
+            <h5 class="footer-head">Platform</h5>
+            <ul class="footer-links">
+                <li><a href="/caregiver_dashboard">Caregiver Hub</a></li>
+                <li><a href="/nurse_dashboard">Medical Portal</a></li>
+                <li><a href="/tutorials">Tutorial Library</a></li>
+                <li><a href="/medical_items">Inventory Tracking</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-nav">
+            <h5 class="footer-head">Company</h5>
+            <ul class="footer-links">
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Contact Support</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-nav">
+            <h5 class="footer-head">Emergency</h5>
+            <ul class="footer-links">
+                <li><a href="/ambulance" class="text-danger fw-bold"><i class="fas fa-ambulance me-2"></i>Find Ambulance</a></li>
+                <li><a href="#" class="text-warning fw-bold"><i class="fas fa-phone-alt me-2"></i>Crisis Line</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <p>&copy; 2026 AI Palliative Care Platform. Designed for Compassion. All Rights Reserved.</p>
+    </div>
+</footer>
 
 
 <!-- Bootstrap JS -->
@@ -109,39 +166,39 @@ function resetTimer() {
     }, 300000); // 5 minutes
 }
 
-document.onload = resetTimer;
-document.onmousemove = resetTimer;
-document.onkeypress = resetTimer;
-document.onclick = resetTimer;
-document.onscroll = resetTimer;
+window.onload = resetTimer;
+window.onmousemove = resetTimer;
+window.onkeypress = resetTimer;
+window.onclick = resetTimer;
+window.onscroll = resetTimer;
 </script>
 {% endif %}
 
 <!-- 🎭 PAGE TRANSITION SCRIPT -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const links = document.querySelectorAll('a[href]');
+    const mainContent = document.getElementById('main-content');
+    
+    // Smooth fade in
+    mainContent.style.opacity = '1';
+
+    const links = document.querySelectorAll('a[href]:not(.navbar-toggler)');
     
     links.forEach(link => {
         link.addEventListener('click', e => {
             const target = link.getAttribute('href');
             
-            // Allow default behavior for external links, anchor links, or new tabs, or if it's the current page
-            if (target.startsWith('#') || link.target === '_blank' || target === window.location.pathname) {
+            if (!target || target.startsWith('#') || link.target === '_blank' || target === window.location.pathname || target.startsWith('javascript:')) {
                 return;
             }
             
-            // Otherwise, intercept and animate out
             e.preventDefault();
-            const mainContent = document.getElementById('main-content');
-            if (mainContent) {
-                mainContent.classList.remove('page-transition');
-                mainContent.classList.add('page-transition-out');
-            }
+            mainContent.style.opacity = '0';
+            mainContent.style.transform = 'translateY(10px)';
             
             setTimeout(() => {
                 window.location.href = target;
-            }, 400); // Wait 400ms for animation to finish
+            }, 300);
         });
     });
 });
@@ -154,13 +211,8 @@ window.addEventListener('scroll', () => {
     if (nav) {
         if (window.scrollY > 50) {
             nav.classList.add('scrolled');
-            // Remove inline styles if they exist from previous versions
-            nav.style.background = '';
-            nav.style.padding = '';
         } else {
             nav.classList.remove('scrolled');
-            nav.style.background = '';
-            nav.style.padding = '';
         }
     }
 });
@@ -175,13 +227,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
     if (installBtn) {
         installBtn.classList.remove('d-none');
-        console.log('✅ PWA Install button enabled');
     }
-});
-
-window.addEventListener('appinstalled', (evt) => {
-    console.log('✨ PWA was installed');
-    if (installBtn) installBtn.classList.add('d-none');
 });
 
 if (installBtn) {
@@ -189,11 +235,8 @@ if (installBtn) {
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response: ${outcome}`);
             deferredPrompt = null;
             installBtn.classList.add('d-none');
-        } else {
-            alert("App is already installed or your browser doesn't support the prompt. Check home screen!");
         }
     });
 }
@@ -202,22 +245,12 @@ if (installBtn) {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then(reg => {
-                console.log('✅ Service Worker Active');
-                reg.onupdatefound = () => {
-                    const worker = reg.installing;
-                    worker.onstatechange = () => {
-                        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('Update found, please refresh.');
-                        }
-                    };
-                };
-            }).catch(e => console.error('❌ Service Worker Error:', e));
+            .catch(e => console.error('❌ Service Worker Error:', e));
     });
 }
 </script>
 
-<!-- 📥 EXTRA MODALS (placed outside transforms) -->
+<!-- 📥 EXTRA MODALS -->
 {% block extra_modals %}{% endblock %}
 
 </body>

@@ -1,3 +1,5 @@
+from werkzeug.security import generate_password_hash
+
 def init_db():
     conn = get_db()
 
@@ -23,8 +25,10 @@ def init_db():
     admin = conn.execute("SELECT * FROM users WHERE role='admin'").fetchone()
 
     if not admin:
+        hashed_pw = generate_password_hash("admin123")
         conn.execute(
-            "INSERT INTO users(username,password,role) VALUES ('admin','admin','admin')"
+            "INSERT INTO users(username,password,role) VALUES ('admin',?,'admin')",
+            (hashed_pw,)
         )
 
     conn.commit()
