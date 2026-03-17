@@ -2,31 +2,75 @@
 {% block content %}
 
 <div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white mb-2" style="font-size: 2.5rem; text-shadow: 0 4px 15px rgba(0,0,0,0.3);">🚑 Ambulance Fleet</h2>
+        <p class="text-light opacity-75 mx-auto" style="max-width: 600px;">
+            In case of emergency, please contact our 24/7 ambulance service immediately.
+        </p>
+    </div>
 
-    <h2 class="text-center text-white mb-4">🚑 Ambulance Service</h2>
-
-    <div class="row">
-
+    <div class="row g-4">
         {% for amb in ambulances %}
-        <div class="col-md-4 mb-4">
-            <div class="card dashboard-card p-3 text-center">
+        <div class="col-md-4">
+            <div class="dashboard-card p-4 h-100" style="background: rgba(43, 61, 47, 0.85); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); transition: all 0.3s ease;">
+                
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="icon" style="font-size: 2.5rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">🚑</div>
+                    {% if amb.status == "Available" %}
+                        <span class="badge bg-success rounded-pill px-3 py-2 fw-bold" style="box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3);">Available</span>
+                    {% elif amb.status == "Busy" %}
+                        <span class="badge bg-danger rounded-pill px-3 py-2 fw-bold" style="box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);">Busy</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2 fw-bold" style="box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3);">{{ amb.status }}</span>
+                    {% endif %}
+                </div>
 
-                <h5>{{ amb.vehicle_no }}</h5>
-                <p>Driver: {{ amb.driver }}</p>
-                <p>📞 {{ amb.phone }}</p>
+                <h4 class="fw-bold text-white mb-1" style="letter-spacing: 1px;">{{ amb.vehicle_no }}</h4>
+                <div class="w-100 border-bottom border-white border-opacity-10 my-3"></div>
 
-                {% if amb.status == "Available" %}
-                    <span class="badge bg-success">Available</span>
-                {% else %}
-                    <span class="badge bg-danger">Busy</span>
-                {% endif %}
+                <div class="text-start mb-4">
+                    <div class="d-flex align-items-center mb-3 text-white-50">
+                        <div class="bg-white bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-user-tie text-white"></i>
+                        </div>
+                        <div>
+                            <small class="d-block text-uppercase mb-0" style="font-size: 0.7rem; letter-spacing: 1px;">Driver</small>
+                            <span class="fw-bold text-white">{{ amb.driver }}</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3 text-white-50">
+                        <div class="bg-white bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-phone-alt text-white"></i>
+                        </div>
+                        <div>
+                            <small class="d-block text-uppercase mb-0" style="font-size: 0.7rem; letter-spacing: 1px;">Emergency Contact</small>
+                            <span class="fw-bold text-white">{{ amb.phone }}</span>
+                        </div>
+                    </div>
+                </div>
 
+                <a href="tel:{{ amb.phone }}" class="btn btn-outline-light w-100 rounded-pill py-3 fw-bold mt-auto" style="border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s ease;">
+                    <i class="fas fa-phone-volume me-2"></i> CALL NOW
+                </a>
             </div>
         </div>
         {% endfor %}
-
     </div>
 
+    <div class="text-center mt-5">
+        <a href="/caregiver_dashboard" class="btn btn-primary px-5 py-3 rounded-pill shadow-lg">
+            <i class="fas fa-th-large me-2"></i> BACK TO DASHBOARD
+        </a>
+    </div>
 </div>
+
+<style>
+    .dashboard-card:hover {
+        transform: translateY(-10px);
+        background: rgba(53, 71, 57, 0.95) !important;
+        border-color: rgba(163, 193, 173, 0.4) !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important;
+    }
+</style>
 
 {% endblock %}

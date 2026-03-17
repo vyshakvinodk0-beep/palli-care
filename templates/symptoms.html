@@ -1,22 +1,109 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container py-5 text-white">
+<div class="container py-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white mb-2" style="font-size: 2.5rem; text-shadow: 0 4px 15px rgba(0,0,0,0.3);">🧠 AI Symptom Assessment</h2>
+        <p class="text-light opacity-75 mx-auto" style="max-width: 600px;">
+            Evaluate the patient's current condition using our intelligent diagnostic tool. Each score helps us tailor the care plan.
+        </p>
+    </div>
 
-<h3>Patient Symptom Assessment</h3>
+    <div class="mx-auto" style="max-width: 700px;">
+        <div class="dashboard-card p-5" style="background: rgba(43, 61, 47, 0.85); border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.4);">
+            
+            <form method="POST">
+                <div class="symptom-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="fw-bold text-white"><i class="fas fa-pills me-2 text-danger"></i> Pain Level</label>
+                        <span id="painVal" class="badge rounded-pill bg-dark border border-secondary px-3">3</span>
+                    </div>
+                    <input type="range" class="form-range custom-slider" name="pain" min="1" max="5" value="3" oninput="document.getElementById('painVal').innerText = this.value">
+                    <div class="d-flex justify-content-between small text-white-50 mt-1">
+                        <span>None</span>
+                        <span>Severe</span>
+                    </div>
+                </div>
 
-<form method="POST">
+                <div class="symptom-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="fw-bold text-white"><i class="fas fa-battery-quarter me-2 text-warning"></i> Fatigue</label>
+                        <span id="fatigueVal" class="badge rounded-pill bg-dark border border-secondary px-3">3</span>
+                    </div>
+                    <input type="range" class="form-range custom-slider" name="fatigue" min="1" max="5" value="3" oninput="document.getElementById('fatigueVal').innerText = this.value">
+                    <div class="d-flex justify-content-between small text-white-50 mt-1">
+                        <span>Lively</span>
+                        <span>Exhausted</span>
+                    </div>
+                </div>
 
-<input class="form-control mb-3" type="number" name="pain" placeholder="Pain Level (0–3)" required>
-<input class="form-control mb-3" type="number" name="fatigue" placeholder="Fatigue (0–3)" required>
-<input class="form-control mb-3" type="number" name="nausea" placeholder="Nausea (0–3)" required>
-<input class="form-control mb-3" type="number" name="depression" placeholder="Depression (0–3)" required>
-<input class="form-control mb-3" type="number" name="appetite" placeholder="Appetite Loss (0–3)" required>
+                <div class="symptom-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="fw-bold text-white"><i class="fas fa-disease me-2 text-info"></i> Nausea</label>
+                        <span id="nauseaVal" class="badge rounded-pill bg-dark border border-secondary px-3">2</span>
+                    </div>
+                    <input type="range" class="form-range custom-slider" name="nausea" min="1" max="5" value="2" oninput="document.getElementById('nauseaVal').innerText = this.value">
+                    <div class="d-flex justify-content-between small text-white-50 mt-1">
+                        <span>Healthy</span>
+                        <span>Constant Nausea</span>
+                    </div>
+                </div>
 
-<button class="btn btn-info">Predict Care Level</button>
+                <div class="symptom-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="fw-bold text-white"><i class="fas fa-cloud-rain me-2 text-primary"></i> Depression</label>
+                        <span id="depressionVal" class="badge rounded-pill bg-dark border border-secondary px-3">2</span>
+                    </div>
+                    <input type="range" class="form-range custom-slider" name="depression" min="1" max="5" value="2" oninput="document.getElementById('depressionVal').innerText = this.value">
+                    <div class="d-flex justify-content-between small text-white-50 mt-1">
+                        <span>Cheerful</span>
+                        <span>Deep Sadness</span>
+                    </div>
+                </div>
 
-</form>
+                <div class="symptom-group mb-5">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="fw-bold text-white"><i class="fas fa-utensils me-2 text-success"></i> Appetite Loss</label>
+                        <span id="appetiteVal" class="badge rounded-pill bg-dark border border-secondary px-3">3</span>
+                    </div>
+                    <input type="range" class="form-range custom-slider" name="appetite" min="1" max="5" value="3" oninput="document.getElementById('appetiteVal').innerText = this.value">
+                    <div class="d-flex justify-content-between small text-white-50 mt-1">
+                        <span>Full Appetite</span>
+                        <span>No Interest in Food</span>
+                    </div>
+                </div>
 
+                <button type="submit" class="btn btn-glow w-100 py-3 rounded-pill fw-bold" style="font-size: 1.1rem;">
+                    <i class="fas fa-robot me-2"></i> GENERATE CARE PLAN
+                </button>
+            </form>
+
+        </div>
+    </div>
 </div>
+
+<style>
+    .custom-slider {
+        height: 10px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 5px;
+        outline: none;
+    }
+    .custom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 25px;
+        height: 25px;
+        background: var(--secondary);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(220, 179, 123, 0.5);
+        border: 2px solid #fff;
+    }
+    .badge {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 1rem;
+    }
+</style>
 
 {% endblock %}

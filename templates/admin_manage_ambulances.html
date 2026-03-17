@@ -44,6 +44,10 @@
 
                 <form action="/update_ambulance/{{ amb.id }}" method="POST">
                     <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">Vehicle Number</label>
+                        <input type="text" name="vehicle_no" class="form-control form-control-sm bg-dark text-white border-secondary" value="{{ amb.vehicle_no }}" required>
+                    </div>
+                    <div class="mb-2">
                         <label class="form-label small text-muted mb-1">Status</label>
                         <select name="status" class="form-select form-select-sm bg-dark text-white border-secondary">
                             <option value="Available" {% if amb.status == 'Available' %}selected{% endif %}>Available</option>

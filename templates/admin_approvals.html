@@ -29,6 +29,7 @@
                             <th class="py-3">Patient</th>
                             <th class="py-3">Service</th>
                             <th class="py-3">Caregiver</th>
+                            <th class="py-3">Schedule Date</th>
                             <th class="py-3">Action</th>
                         </tr>
                     </thead>
@@ -39,11 +40,16 @@
                                 <td class="py-3 fw-bold text-white">{{ s.patient_name }}</td>
                                 <td class="py-3"><span class="badge bg-outline-info border border-info rounded-pill px-3">{{ s.service }}</span></td>
                                 <td class="py-3 small text-white-50">{{ s.caregiver }}</td>
+                                <td class="py-3">
+                                    <form id="approve-form-{{ s.id }}" action="/approve_service/{{ s.id }}" method="POST">
+                                        <input type="date" name="scheduled_date" class="form-control form-control-sm bg-dark text-white border-secondary rounded-pill px-3" required>
+                                    </form>
+                                </td>
                                 <td class="py-3 px-3">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <a href="/approve_service/{{ s.id }}" class="btn btn-sm btn-success rounded-pill px-3" title="Approve">
-                                            <i class="fas fa-check"></i>
-                                        </a>
+                                        <button type="submit" form="approve-form-{{ s.id }}" class="btn btn-sm btn-success rounded-pill px-3" title="Approve">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </button>
                                         <a href="/reject_service/{{ s.id }}" class="btn btn-sm btn-danger rounded-pill px-3" title="Reject" onclick="return confirm('Reject this service booking?')">
                                             <i class="fas fa-times"></i>
                                         </a>

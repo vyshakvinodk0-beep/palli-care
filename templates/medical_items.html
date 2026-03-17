@@ -52,8 +52,12 @@
                         </a>
                         {% elif session.role == 'caregiver' %}
                             {% if item.quantity > 0 %}
-                            <form action="/book_item/{{ item.id }}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" style="font-weight: 600; font-size: 14px;">
+                            <form action="/book_item/{{ item.id }}" method="POST" class="d-flex flex-column gap-2 align-items-center">
+                                <div class="d-flex align-items-center gap-1">
+                                    <label class="small fw-bold text-muted" style="font-size: 10px;">RETURN BY:</label>
+                                    <input type="date" name="return_date" class="form-control form-control-sm" style="width: 120px; font-size: 11px;" required min="{{ today_date }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm w-100" style="font-weight: 600; font-size: 13px;">
                                     Book Now
                                 </button>
                             </form>

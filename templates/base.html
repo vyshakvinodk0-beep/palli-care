@@ -91,10 +91,117 @@
 </nav>
 
 
+<!-- ✅ GLOBAL SOS REPLY BANNER (For Caregivers) -->
+{% if session.get("role") == "caregiver" %}
+<div id="globalSosReplyContainer" class="d-none text-center fw-bold sticky-top w-100" style="background-color: #ffd7d7; color: #842029; border-bottom: 2px solid #ea868f; padding: 15px; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <div class="container d-flex justify-content-between align-items-center">
+        <span>🚨 ADMIN EMERGENCY REPLY: <span id="globalSosReplyMessage"></span></span>
+        <button onclick="dismissGlobalSOSReply()" class="btn btn-sm btn-danger rounded-pill px-3">Dismiss</button>
+    </div>
+</div>
+{% endif %}
+
 <!-- ✅ PAGE CONTENT -->
 <main id="main-content" class="container-fluid page-transition" style="min-height: 80vh;">
     {% block content %}{% endblock %}
 </main>
+
+<!-- ✅ GLOBAL SOS FLOATING BUTTON (For Caregivers) -->
+{% if session.get("role") == "caregiver" %}
+<div class="fixed-sos-trigger" style="position: fixed; bottom: 30px; right: 30px; z-index: 1050;">
+    <button class="btn btn-danger btn-lg shadow-lg d-flex align-items-center justify-content-center" 
+            style="width: 70px; height: 70px; border-radius: 50%; animation: pulse-red 2s infinite; font-size: 1.5rem;" 
+            data-bs-toggle="modal" data-bs-target="#sosModalGlobal">
+        🚨
+    </button>
+    <div class="text-danger fw-bold text-center mt-2 bg-dark bg-opacity-75 rounded-pill px-2 py-1" style="font-size: 0.7rem;">SOS</div>
+</div>
+
+<style>
+@keyframes pulse-red {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+</style>
+
+<!-- ✅ SOS CONFIRMATION MODAL (Global) -->
+<div class="modal fade" id="sosModalGlobal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px); z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(45, 10, 10, 0.98); border-radius: 20px; border: 2px solid #dc3545; box-shadow: 0 10px 60px rgba(220,53,69,0.5);">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">🚨 CONFIRM EMERGENCY</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/trigger_sos" method="POST">
+                <div class="modal-body text-center text-white pt-0 px-4">
+                    <h4 class="text-danger fw-bold mb-3">Trigger SOS Alarm?</h4>
+                    <p class="mb-4" style="font-size: 0.95rem; line-height: 1.4; opacity: 0.9;">This will instantly notify the Admin. Only use for real emergencies.</p>
+                    
+                    <div class="alert alert-dark text-start p-3" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <label class="form-label small mb-2" style="color:#e3cd9c; font-weight: 600;">Type "SOS" to unlock:</label>
+                        <input type="text" id="sosConfirmInputGlobal" class="form-control bg-dark text-white border-secondary text-center fw-bold fs-3 py-2" style="border-radius: 10px;" placeholder="SOS" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 justify-content-center">
+                    <button type="button" class="btn btn-secondary px-4 me-2" data-bs-dismiss="modal" style="border-radius: 30px;">CANCEL</button>
+                    <button type="submit" id="sosSubmitBtnGlobal" class="btn btn-danger fw-bold px-4 py-2" style="border-radius: 30px; box-shadow: 0 4px 15px rgba(220,53,69,0.4);" disabled>🚀 TRIGGER SOS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sosInput = document.getElementById('sosConfirmInputGlobal');
+    if (sosInput) {
+        sosInput.addEventListener('input', function(e) {
+            const btn = document.getElementById('sosSubmitBtnGlobal');
+            if (btn) btn.disabled = (e.target.value.trim().toUpperCase() !== 'SOS');
+        });
+    }
+
+    // Reset modal on close
+    const sosModalEl = document.getElementById('sosModalGlobal');
+    if (sosModalEl) {
+        sosModalEl.addEventListener('hidden.bs.modal', function () {
+            if (sosInput) sosInput.value = '';
+            const btn = document.getElementById('sosSubmitBtnGlobal');
+            if (btn) btn.disabled = true;
+        });
+    }
+
+    // Polling for SOS Status (Global)
+    {% if session.get("role") == "caregiver" %}
+    function checkGlobalSOSStatus() {
+        fetch('/api/check_sos_status')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('globalSosReplyContainer');
+                const message = document.getElementById('globalSosReplyMessage');
+                if (data.has_message) {
+                    if (message) message.innerText = data.message;
+                    if (container) container.classList.remove('d-none');
+                } else {
+                    if (container) container.classList.add('d-none');
+                }
+            }).catch(e => {});
+    }
+    checkGlobalSOSStatus();
+    setInterval(checkGlobalSOSStatus, 8000);
+
+    window.dismissGlobalSOSReply = function() {
+        fetch('/api/dismiss_sos_message', { method: 'POST' })
+            .then(() => {
+                const container = document.getElementById('globalSosReplyContainer');
+                if (container) container.classList.add('d-none');
+            });
+    }
+    {% endif %}
+});
+</script>
+{% endif %}
 
 
 <!-- 🌟 PREMIUM FOOTER -->
@@ -217,29 +324,109 @@ window.addEventListener('scroll', () => {
     }
 });
 </script>
+<!-- 📥 PWA INSTALL MODAL -->
+<div class="modal fade" id="pwaInstallModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(15px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(18, 25, 20, 0.98); border-radius: 30px; border: 1px solid rgba(220,179,123,0.3); overflow: hidden; box-shadow: 0 25px 80px rgba(0,0,0,0.5);">
+            <div class="text-end p-3 position-absolute end-0 top-0" style="z-index: 10;">
+                <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body text-center p-5">
+                <div class="mb-4">
+                    <img src="/static/images/pwa-icon-192.png" alt="PalliCare" width="100" height="100" class="rounded-4 shadow-lg mb-3" style="border: 3px solid rgba(220,179,123,0.3);">
+                    <h3 class="fw-bold text-white mb-2">PalliCare Web App</h3>
+                    <p class="text-white-50" style="font-size: 0.95rem;">Install PalliCare on your home screen for faster access, offline support, and a premium full-screen experience.</p>
+                </div>
+
+                <div id="pwaNativePrompt" class="d-none">
+                    <button id="pwaInstallBtnModal" class="btn btn-glow w-100 py-3 mb-3 fw-bold" style="border-radius: 15px; font-size: 1.1rem;">
+                        <i class="fas fa-download me-2"></i> INSTALL NOW
+                    </button>
+                    <p class="small text-white-50">It only takes a second and doesn't use storage like traditional apps.</p>
+                </div>
+
+                <div id="pwaIosPrompt" class="d-none text-start p-3 rounded-4" style="background: rgba(220,179,123,0.1); border: 1px solid rgba(220,179,123,0.2);">
+                    <p class="small text-white mb-2 fw-bold"><i class="fas fa-apple-alt me-2"></i> How to install on iOS:</p>
+                    <ol class="small text-white-50 mb-0 ps-3">
+                        <li>Tap the <b>Share</b> button <i class="fas fa-share-square mx-1"></i> (bottom center on Safari).</li>
+                        <li>Scroll down and tap <b>'Add to Home Screen'</b> <i class="fas fa-plus-square mx-1"></i>.</li>
+                        <li>Tap <b>'Add'</b> in the top right corner.</li>
+                    </ol>
+                </div>
+
+                <div id="pwaGenericPrompt" class="">
+                    <p class="small text-warning mb-3"><i class="fas fa-info-circle me-1"></i> Pro Tip: Add this page to your home screen via browser settings!</p>
+                    <button class="btn btn-outline-light w-100 py-2" data-bs-dismiss="modal" style="border-radius: 12px;">GOT IT!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-// Intercept Add to Home Screen prompt
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
+// PWA Installation Intelligence
+document.addEventListener('DOMContentLoaded', () => {
+    let deferredPrompt;
+    const modalTarget = new bootstrap.Modal(document.getElementById('pwaInstallModal'));
+    const nativeArea = document.getElementById('pwaNativePrompt');
+    const iosArea = document.getElementById('pwaIosPrompt');
+    const genericArea = document.getElementById('pwaGenericPrompt');
+    const installBtnModal = document.getElementById('pwaInstallBtnModal');
+    const installBtnNav = document.getElementById('installBtn');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (installBtn) {
-        installBtn.classList.remove('d-none');
-    }
-});
+    // Detect environment
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const hasVisited = localStorage.getItem('pwaPromptShown');
 
-if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            installBtn.classList.add('d-none');
+    // Handle Native Prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show in Navbar
+        if (installBtnNav) installBtnNav.classList.remove('d-none');
+        
+        // Prepare Modal
+        if (nativeArea) nativeArea.classList.remove('d-none');
+        if (genericArea) genericArea.classList.add('d-none');
+
+        // Check for Auto-Pop (1st visit only, not installed)
+        if (!hasVisited && !isInstalled) {
+            setTimeout(() => {
+                modalTarget.show();
+                localStorage.setItem('pwaPromptShown', 'true');
+            }, 3000); // 3-second delay for smooth feeling
         }
     });
-}
+
+    // Handle Install Click
+    if (installBtnModal) {
+        installBtnModal.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    modalTarget.hide();
+                    if (installBtnNav) installBtnNav.classList.add('d-none');
+                }
+                deferredPrompt = null;
+            }
+        });
+    }
+
+    // Handle iOS specific pop (Auto-Pop for iOS)
+    if (isIos && !isInstalled && !hasVisited) {
+        if (iosArea) iosArea.classList.remove('d-none');
+        if (genericArea) genericArea.classList.add('d-none');
+        
+        setTimeout(() => {
+            modalTarget.show();
+            localStorage.setItem('pwaPromptShown', 'true');
+        }, 3000);
+    }
+});
 
 // Service Worker Logic
 if ('serviceWorker' in navigator) {

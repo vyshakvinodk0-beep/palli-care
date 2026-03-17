@@ -20,24 +20,7 @@
       {% endif %}
     {% endwith %}
 
-    <!-- ✅ EMERGENCY SOS BANNER (if active) -->
-    <div class="text-end mb-3">
-        <button class="btn btn-danger btn-lg fw-bold px-4" style="border-radius: 30px; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4); animation: pulse 2s infinite;" data-bs-toggle="modal" data-bs-target="#sosModal">🚨 EMERGENCY SOS</button>
-    </div>
-    
-    <!-- ✅ SOS REPLY BANNER CONTAINER -->
-    <div id="sosReplyContainer" class="d-none text-center fw-bold mt-2 mb-4 mx-auto" style="max-width: 800px; background-color: #d1e7dd; color: #0f5132; border-radius: 12px; font-size: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #0f5132;">
-        <div>🚑 ADMIN REPLY: <span id="sosReplyMessage"></span></div>
-        <button onclick="dismissSOSReply()" class="btn btn-sm btn-outline-success mt-2 fw-bold" style="border-radius: 20px;">Dismiss</button>
-    </div>
-    <style>
-    @keyframes pulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-    }
-    </style>
-
+    <!-- ✅ DAILY WELL-BEING SECTION (Removed redundant SOS) -->
     <div class="text-center mb-5">
         <h2 class="fw-bold text-white mb-2" style="text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.5rem;">Caregiver Dashboard</h2>
         <div class="mx-auto" style="max-width: 600px; font-style: italic; color: #a3c1ad; font-size: 0.95rem; letter-spacing: 0.5px;">
@@ -190,21 +173,42 @@
                         <thead>
                             <tr>
                                 <th>Item</th>
-                                <th>Borrowed On</th>
+                                <th>Return By</th>
                                 <th>Status</th>
+                                <th>Admin Notes</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in active_items %}
-                            <tr>
-                                <td class="fw-bold text-white">{{ item.item_name }}</td>
-                                <td class="small">{{ item.booking_date }}</td>
+                            {% set is_overdue = false %}
+                            {% if item.return_date and today_date %}
+                                {% if (item.return_date | string) < (today_date | string) and item.status == 'In Use' %}
+                                    {% set is_overdue = true %}
+                                {% endif %}
+                            {% endif %}
+                            <tr {% if is_overdue %}style="background: rgba(220, 53, 69, 0.1);"{% endif %}>
+                                <td class="fw-bold text-white">
+                                    {{ item.item_name }}
+                                    {% if is_overdue %}
+                                        <div class="small text-danger fw-bold"><i class="fas fa-exclamation-triangle"></i> OVERDUE</div>
+                                    {% endif %}
+                                </td>
+                                <td class="small">{{ item.return_date or 'N/A' }}</td>
                                 <td>
                                     {% if item.status == 'In Use' %}
                                         <span class="badge bg-success">In Use</span>
-                                    {% else %}
+                                    {% elif item.status == 'Pending' %}
                                         <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-white-50">
+                                    {% if item.admin_notes %}
+                                        <div class="p-2 rounded bg-dark" style="max-width: 200px;">
+                                            <i class="fas fa-comment ms-1 text-info"></i> {{ item.admin_notes }}
+                                        </div>
+                                    {% else %}
+                                        -
                                     {% endif %}
                                 </td>
                                 <td>
@@ -260,34 +264,40 @@
                         label: 'Heart Rate (bpm)',
                         data: {{ chart_hr | safe }},
                         borderColor: heartRateColor,
-                        backgroundColor: 'rgba(255, 51, 102, 0.1)',
-                        borderWidth: 3,
+                        backgroundColor: 'rgba(255, 51, 102, 0.2)',
+                        borderWidth: 4,
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: heartRateColor,
-                        pointRadius: 4
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        spanGaps: true,
+                        cubicInterpolationMode: 'monotone'
                     },
                     {
                         label: 'O2 Saturation (%)',
                         data: {{ chart_o2 | safe }},
                         borderColor: o2Color,
-                        backgroundColor: 'rgba(0, 191, 255, 0.1)',
-                        borderWidth: 3,
+                        backgroundColor: 'rgba(0, 191, 255, 0.2)',
+                        borderWidth: 4,
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: o2Color,
-                        pointRadius: 4
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        spanGaps: true,
+                        cubicInterpolationMode: 'monotone'
                     },
                     {
                         label: 'Systolic BP (mmHg)',
                         data: {{ chart_bp | safe }},
                         borderColor: bpColor,
-                        backgroundColor: 'rgba(0, 255, 204, 0.1)',
-                        borderWidth: 3,
+                        backgroundColor: 'rgba(0, 255, 204, 0.2)',
+                        borderWidth: 4,
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: bpColor,
-                        pointRadius: 4
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        spanGaps: true,
+                        cubicInterpolationMode: 'monotone'
                     }
                 ]
             },
@@ -306,14 +316,14 @@
                 },
                 scales: {
                     x: {
-                        ticks: { color: '#cccccc' },
+                        ticks: { color: '#cccccc', maxRotation: 45, minRotation: 45 },
                         grid: { color: 'rgba(255,255,255,0.05)' }
                     },
                     y: {
                         ticks: { color: '#cccccc' },
                         grid: { color: 'rgba(255,255,255,0.05)' },
-                        min: 70,
-                        max: 130
+                        beginAtZero: false,
+                        title: { display: true, text: 'Clinical Values', color: '#888' }
                     }
                 }
             }
@@ -386,84 +396,6 @@
   </div>
 </div>
 
-<!-- ✅ SOS CONFIRMATION MODAL -->
-<div class="modal fade" id="sosModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px); z-index: 2000;">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" style="background: rgba(45, 10, 10, 0.98); border-radius: 20px; border: 2px solid #dc3545; box-shadow: 0 10px 60px rgba(220,53,69,0.5);">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold text-white">🚨 CONFIRM EMERGENCY</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="/trigger_sos" method="POST">
-          <div class="modal-body text-center text-white pt-0 px-4">
-              <h4 class="text-danger fw-bold mb-3">Trigger SOS Alarm?</h4>
-              <p class="mb-4" style="font-size: 0.95rem; line-height: 1.4; opacity: 0.9;">This will instantly notify the Admin and stay locked until they respond.</p>
-              
-              <div class="alert alert-dark text-start p-3" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
-                  <label class="form-label small mb-2" style="color:#e3cd9c; font-weight: 600;">Type "SOS" to unlock:</label>
-                  <input type="text" id="sosConfirmInput" class="form-control bg-dark text-white border-secondary text-center fw-bold fs-3 py-2" style="border-radius: 10px;" placeholder="SOS" required autocomplete="off">
-              </div>
-          </div>
-          <div class="modal-footer border-0 pb-4 justify-content-center">
-              <button type="button" class="btn btn-secondary px-4 me-2" data-bs-dismiss="modal" style="border-radius: 30px; background: #6c757d;">CANCEL</button>
-              <button type="submit" id="sosSubmitBtn" class="btn btn-danger fw-bold px-4 py-2" style="border-radius: 30px; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(220,53,69,0.4);" disabled>🚀 TRIGGER ALARM</button>
-          </div>
-      </form>
-    </div>
-  </div>
-</div>
+<!-- Global SOS Modal & Scripts moved to base.html -->
 
-<script>
-    // Safeguard to prevent accidental click - requires typing 'SOS'
-    document.addEventListener('DOMContentLoaded', function() {
-        const sosInput = document.getElementById('sosConfirmInput');
-        if (sosInput) {
-            sosInput.addEventListener('input', function(e) {
-                const btn = document.getElementById('sosSubmitBtn');
-                if (btn) {
-                    btn.disabled = (e.target.value.trim().toUpperCase() !== 'SOS');
-                }
-            });
-        }
-
-        // Reset modal on close
-        const sosModalEl = document.getElementById('sosModal');
-        if (sosModalEl) {
-            sosModalEl.addEventListener('hidden.bs.modal', function () {
-                if (sosInput) sosInput.value = '';
-                const btn = document.getElementById('sosSubmitBtn');
-                if (btn) btn.disabled = true;
-            });
-        }
-
-        // POLLING FOR ADMIN REPLY
-        function checkSOSStatus() {
-            fetch('/api/check_sos_status')
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.getElementById('sosReplyContainer');
-                    const message = document.getElementById('sosReplyMessage');
-                    if (data.has_message) {
-                        if (message) message.innerText = data.message;
-                        if (container) container.classList.remove('d-none');
-                    } else {
-                        if (container) container.classList.add('d-none');
-                    }
-                })
-                .catch(error => console.error('Error checking SOS status:', error));
-        }
-
-        // Initial check and interval
-        checkSOSStatus();
-        setInterval(checkSOSStatus, 5000);
-    });
-
-    function dismissSOSReply() {
-        fetch('/api/dismiss_sos_message', { method: 'POST' })
-            .then(() => {
-                const container = document.getElementById('sosReplyContainer');
-                if (container) container.classList.add('d-none');
-            });
-    }
-</script>
 {% endblock %}

@@ -9,6 +9,7 @@
     <th>Patient</th>
     <th>Service</th>
     <th>Caregiver</th>
+    <th>Schedule Date</th>
     <th>Status</th>
     <th>Action</th>
 </tr>
@@ -18,6 +19,7 @@
     <td>{{ b.patient_name }}</td>
     <td>{{ b.service }}</td>
     <td>{{ b.caregiver }}</td>
+    <td class="small text-info">{{ b.scheduled_date or 'TBD' }}</td>
     <td>
         {% if b.status == 'Pending' %}
             <span class="badge bg-warning text-dark">Pending</span>

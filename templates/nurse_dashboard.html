@@ -48,6 +48,7 @@
                             <th class="py-3">Patient Name</th>
                             <th class="py-3">Service Type</th>
                             <th class="py-3">Caregiver</th>
+                            <th class="py-3">Appointment</th>
                             <th class="py-3">Actions</th>
                         </tr>
                     </thead>
@@ -58,6 +59,7 @@
                                 <td class="py-3 fw-bold">{{ booking.patient_name }}</td>
                                 <td class="py-3"><span class="badge bg-outline-info border border-info rounded-pill px-3">{{ booking.service }}</span></td>
                                 <td class="py-3 text-white-50">{{ booking.caregiver }}</td>
+                                <td class="py-3 small text-info"><i class="fas fa-calendar-day me-1"></i> {{ booking.scheduled_date or 'TBD' }}</td>
                                 <td class="py-3">
                                     <a href="/nurse_patient_view/{{ booking.id }}" class="btn btn-sm px-4" style="background: #7ca087; color: white; border-radius: 25px;">
                                         Clinical View

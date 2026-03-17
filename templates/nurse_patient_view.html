@@ -7,7 +7,7 @@
         <div>
             <a href="/nurse_dashboard" class="link me-3 fw-bold" style="color: #7ca087;">← Back to Dashboard</a>
             <h2 class="fw-bold text-white mb-1" style="text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.2rem;"><i class="fas fa-user-injured text-info me-2"></i> Patient: {{ booking.patient_name }}</h2>
-            <div style="color: #a3c1ad; letter-spacing: 0.5px;"><i class="fas fa-notes-medical me-1"></i> Clinical Monitor — {{ booking.service }} | Caregiver: {{ booking.caregiver }}</div>
+            <div style="color: #a3c1ad; letter-spacing: 0.5px;"><i class="fas fa-notes-medical me-1"></i> Clinical Monitor — {{ booking.service }} | Caregiver: {{ booking.caregiver }} | <b><i class="fas fa-calendar-check me-1"></i> Appointment: {{ booking.scheduled_date or 'TBD' }}</b></div>
         </div>
         
         <button class="btn btn-glow px-4" data-bs-toggle="modal" data-bs-target="#clinicalNoteModal"><i class="fas fa-plus me-2"></i> Add Clinical Note</button>
@@ -33,7 +33,12 @@
                 <!-- 📊 VITALS CONTENT -->
                 <div class="tab-pane fade show active" id="vitalsContent">
                     <div class="glass-card mb-4 p-5" style="border-radius: 24px;">
-                        <h5 class="fw-bold text-white mb-4">Clinical Metric Overview (Heart Rate, O2 & BP)</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-white m-0">Clinical Metric Overview (Heart Rate, O2 & BP)</h5>
+                            <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#updateVitalsModal">
+                                <i class="fas fa-edit me-2"></i> Update Vitals
+                            </button>
+                        </div>
                         <canvas id="nurseChart" height="280"></canvas>
                     </div>
 
@@ -232,6 +237,43 @@
     </div>
 </div>
 
+<!-- ✅ UPDATE VITALS MODAL -->
+<div class="modal fade" id="updateVitalsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(18, 25, 20, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; backdrop-filter: blur(20px);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-white">Update Patient Vitals (Nurse Log)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/nurse_update_vitals" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="small text-white-50 mb-2">Heart Rate (bpm)</label>
+                            <input type="number" name="heart_rate" class="form-control bg-dark border-0 text-white p-3" value="{{ logs[0].heart_rate if logs else 75 }}" required style="border-radius: 12px;">
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-white-50 mb-2">O2 Saturation (%)</label>
+                            <input type="number" name="o2" class="form-control bg-dark border-0 text-white p-3" value="{{ logs[0].o2_saturation if logs else 98 }}" required style="border-radius: 12px;">
+                        </div>
+                        <div class="col-12">
+                            <label class="small text-white-50 mb-2">Systolic Blood Pressure (mmHg)</label>
+                            <input type="number" name="bp" class="form-control bg-dark border-0 text-white p-3" value="{{ logs[0].bp_systolic if logs else 120 }}" required style="border-radius: 12px;">
+                        </div>
+                        <div class="col-12 mt-4 text-center">
+                            <p class="small text-info opacity-75"><i class="fas fa-sync-alt me-1"></i> This data will instantly sync to the caregiver dashboard charts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4">
+                    <button type="submit" class="btn btn-glow w-100">CONFIRM & SYNC VITALS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- ✅ CHART.JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -281,11 +323,19 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#ffffff' } }
+                legend: { labels: { color: '#ffffff', usePointStyle: true, padding: 20 } }
             },
             scales: {
-                x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                y: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                x: { 
+                    ticks: { color: '#ffffff', maxRotation: 45, minRotation: 45 }, 
+                    grid: { color: 'rgba(255,255,255,0.05)' } 
+                },
+                y: { 
+                    ticks: { color: '#ffffff' }, 
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    beginAtZero: false,
+                    title: { display: true, text: 'Clinical Stats', color: '#888' }
+                }
             }
         }
     });

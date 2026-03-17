@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, session, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, session, flash, send_from_directory, jsonify
 import sqlite3
 import os
 import pickle
-from datetime import timedelta
+from datetime import timedelta, datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -98,6 +98,8 @@ def init_db():
     columns = [row[1] for row in cursor.fetchall()]
     if 'status' not in columns:
         conn.execute("ALTER TABLE booking ADD COLUMN status TEXT DEFAULT 'Approved'") # Existing ones approved
+    if 'scheduled_date' not in columns:
+        conn.execute("ALTER TABLE booking ADD COLUMN scheduled_date TEXT")
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS patient_logs(
@@ -228,10 +230,20 @@ def init_db():
         item_id INTEGER,
         caregiver TEXT,
         booking_date TEXT,
-        status TEXT DEFAULT 'In Use', -- 'In Use', 'Finished'
+        return_date TEXT,
+        admin_notes TEXT,
+        status TEXT DEFAULT 'Pending', -- 'Pending', 'In Use', 'Finished', 'Rejected'
         FOREIGN KEY(item_id) REFERENCES medical_items(id)
     )
     """)
+
+    # Migration for item_bookings columns
+    cursor = conn.execute("PRAGMA table_info(item_bookings)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if 'return_date' not in columns:
+        conn.execute("ALTER TABLE item_bookings ADD COLUMN return_date TEXT")
+    if 'admin_notes' not in columns:
+        conn.execute("ALTER TABLE item_bookings ADD COLUMN admin_notes TEXT")
 
     amb_count = conn.execute("SELECT COUNT(*) FROM ambulances").fetchone()[0]
     if amb_count == 0:
@@ -513,14 +525,14 @@ def caregiver_dashboard():
     ).fetchone()
     
     recent_logs = conn.execute(
-        "SELECT * FROM patient_logs WHERE caregiver=? ORDER BY id DESC LIMIT 7",
+        "SELECT * FROM patient_logs WHERE caregiver=? ORDER BY id DESC LIMIT 10",
         (session["user"],)
     ).fetchall()
 
     recent_logs = list(reversed(recent_logs))
     
     active_items = conn.execute("""
-        SELECT ib.id, mi.item_name, ib.booking_date, ib.status 
+        SELECT ib.id, mi.item_name, ib.booking_date, ib.return_date, ib.status, ib.admin_notes
         FROM item_bookings ib 
         JOIN medical_items mi ON ib.item_id = mi.id
         WHERE ib.caregiver = ? AND ib.status IN ('In Use', 'Pending')
@@ -542,7 +554,7 @@ def caregiver_dashboard():
     }
 
     import json
-    chart_labels = json.dumps([f"Day {i+1}" for i in range(len(recent_logs))] if recent_logs else ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'])
+    chart_labels = json.dumps([l['date'] for l in recent_logs] if recent_logs else ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'])
     chart_hr = json.dumps([l['heart_rate'] for l in recent_logs] if recent_logs else [72, 75, 78, 74, 80, 77, 75])
     chart_o2 = json.dumps([l['o2_saturation'] for l in recent_logs] if recent_logs else [98, 97, 98, 96, 95, 96, 98])
     chart_bp = json.dumps([l['bp_systolic'] for l in recent_logs] if recent_logs else [120, 118, 122, 125, 120, 115, 118])
@@ -554,7 +566,8 @@ def caregiver_dashboard():
         chart_hr=chart_hr,
         chart_o2=chart_o2,
         chart_bp=chart_bp,
-        active_items=active_items
+        active_items=active_items,
+        today_date=str(date.today())
     )
 
 from datetime import date
@@ -572,7 +585,7 @@ def update_stats():
     o2 = request.form.get("o2", 98)
     bp = request.form.get("bp", 120)
     
-    today = str(date.today())
+    today = datetime.now().strftime("%Y-%m-%d %H:%M")
     
     conn = get_db()
     conn.execute("""
@@ -665,6 +678,51 @@ def add_exercise():
     
     flash("Exercise log recorded ✅", "success")
     return redirect(f"/nurse_patient_view/{booking_id}")
+
+@app.route("/nurse_update_vitals", methods=["POST"])
+def nurse_update_vitals():
+    if session.get("role") != "nurse":
+        return redirect("/login")
+    
+    try:
+        booking_id = int(request.form["booking_id"])
+        hr = int(request.form.get("heart_rate", 75))
+        o2 = int(request.form.get("o2", 98))
+        bp = int(request.form.get("bp", 120))
+        today = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        conn = get_db()
+        # Get the caregiver for this booking to know where to log
+        booking = conn.execute("SELECT caregiver FROM booking WHERE id=?", (booking_id,)).fetchone()
+        if not booking:
+            flash("Invalid booking ID or patient not found ❌", "danger")
+            return redirect("/nurse_dashboard")
+        
+        caregiver = booking['caregiver']
+        
+        # Fetch latest log to preserve non-vital stats
+        latest_row = conn.execute("SELECT comfort_score, mood, sleep, tasks_completed FROM patient_logs WHERE caregiver=? ORDER BY id DESC LIMIT 1", (caregiver,)).fetchone()
+        
+        # Safely extract latest values or use defaults
+        if latest_row:
+            comfort = latest_row['comfort_score'] if latest_row['comfort_score'] is not None else 70
+            mood = latest_row['mood'] if latest_row['mood'] is not None else 'Neutral'
+            sleep = latest_row['sleep'] if latest_row['sleep'] is not None else 'Sound'
+            tasks = latest_row['tasks_completed'] if latest_row['tasks_completed'] is not None else '0/5'
+        else:
+            comfort, mood, sleep, tasks = 70, 'Neutral', 'Sound', '0/5'
+
+        conn.execute("""
+            INSERT INTO patient_logs (caregiver, date, comfort_score, mood, sleep, tasks_completed, heart_rate, o2_saturation, bp_systolic)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (caregiver, today, comfort, mood, sleep, tasks, hr, o2, bp))
+        conn.commit()
+        
+        flash("Clinical vitals updated & synced successfully! ✅", "success")
+        return redirect(f"/nurse_patient_view/{booking_id}")
+    except Exception as e:
+        flash(f"Error updating vitals: {str(e)}", "danger")
+        return redirect("/nurse_dashboard")
 
 # ---------------- ADD CLINICAL NOTE (Nurse Only) ----------------
 @app.route("/add_clinical_note", methods=["POST"])
@@ -799,10 +857,26 @@ def book_item(id):
         return redirect("/login")
 
     conn = get_db()
+    
+    # Check limit: Max 3 items per caregiver
+    active_count = conn.execute(
+        "SELECT COUNT(*) FROM item_bookings WHERE caregiver=? AND status IN ('Pending', 'In Use')",
+        (session["user"],)
+    ).fetchone()[0]
+    
+    if active_count >= 3:
+        flash("Borrowing limit reached (Max 3 items). Please return an item before booking more 🛑", "danger")
+        return redirect("/medical_items")
+
     item = conn.execute("SELECT * FROM medical_items WHERE id=?", (id,)).fetchone()
     
     if not item or item["quantity"] <= 0:
         flash("Sorry, this item is currently unavailable ❌", "danger")
+        return redirect("/medical_items")
+
+    return_date = request.form.get("return_date")
+    if not return_date:
+        flash("Please specify a return date 📅", "warning")
         return redirect("/medical_items")
 
     # Decrease quantity
@@ -815,12 +889,12 @@ def book_item(id):
     # Create booking record with Pending status
     booking_date = datetime.now().strftime("%Y-%m-%d %H:%M")
     conn.execute(
-        "INSERT INTO item_bookings(item_id, caregiver, booking_date, status) VALUES (?, ?, ?, 'Pending')",
-        (id, session["user"], booking_date)
+        "INSERT INTO item_bookings(item_id, caregiver, booking_date, return_date, status) VALUES (?, ?, ?, ?, 'Pending')",
+        (id, session["user"], booking_date, return_date)
     )
     conn.commit()
 
-    flash(f"Request for {item['item_name']} sent! Waiting for admin approval ⏳", "success")
+    flash(f"Request for {item['item_name']} (Return by {return_date}) sent! ⏳", "success")
     return redirect("/medical_items")
 
 # ---------------- FINISH ITEM USAGE (Caregiver Only) ----------------
@@ -865,7 +939,21 @@ def view_item_bookings():
         ORDER BY ib.status DESC, ib.booking_date DESC
     """).fetchall()
     
-    return render_template("admin_item_bookings.html", bookings=data)
+    return render_template("admin_item_bookings.html", bookings=data, today_date=str(date.today()))
+
+# ---------------- SEND MESSAGE RE: ITEM (Admin Only) ----------------
+@app.route("/admin_item_message/<int:id>", methods=["POST"])
+def admin_item_message(id):
+    if session.get("role") != "admin":
+        return redirect("/login")
+    
+    message = request.form.get("message")
+    conn = get_db()
+    conn.execute("UPDATE item_bookings SET admin_notes = ? WHERE id = ?", (message, id))
+    conn.commit()
+    
+    flash("Reminder message sent to Caregiver ✅", "success")
+    return redirect("/view_item_bookings")
 
 # ---------------- ADMIN APPROVALS ----------------
 @app.route("/admin_approvals")
@@ -884,15 +972,17 @@ def admin_approvals():
 
     return render_template("admin_approvals.html", services=services, items=items)
 
-@app.route("/approve_service/<int:id>")
+@app.route("/approve_service/<int:id>", methods=["POST"])
 def approve_service(id):
     if session.get("role") != "admin":
         return redirect("/login")
     
+    scheduled_date = request.form.get("scheduled_date")
+    
     conn = get_db()
-    conn.execute("UPDATE booking SET status='Approved' WHERE id=?", (id,))
+    conn.execute("UPDATE booking SET status='Approved', scheduled_date=? WHERE id=?", (scheduled_date, id))
     conn.commit()
-    flash("Service booking approved ✅", "success")
+    flash(f"Service booking approved and scheduled for {scheduled_date} ✅", "success")
     return redirect("/admin_approvals")
 
 @app.route("/reject_service/<int:id>")
@@ -949,7 +1039,7 @@ def medical_items():
     conn = get_db()
     items = conn.execute("SELECT * FROM medical_items").fetchall()
 
-    return render_template("medical_items.html", items=items)
+    return render_template("medical_items.html", items=items, today_date=str(date.today()))
 
 # ---------------- UPDATE MEDICAL ITEM ----------------
 @app.route("/update_item/<int:id>", methods=["GET", "POST"])
@@ -1035,9 +1125,11 @@ def update_ambulance(id):
     status = request.form.get("status")
     driver = request.form.get("driver")
     phone = request.form.get("phone")
+    vehicle_no = request.form.get("vehicle_no")
 
     conn = get_db()
-    conn.execute("UPDATE ambulances SET status=?, driver=?, phone=? WHERE id=?", (status, driver, phone, id))
+    conn.execute("UPDATE ambulances SET status=?, driver=?, phone=?, vehicle_no=? WHERE id=?", 
+                 (status, driver, phone, vehicle_no, id))
     conn.commit()
 
     flash("Ambulance stats updated successfully ✅", "success")
@@ -1057,7 +1149,6 @@ def add_ambulance():
     conn = get_db()
     conn.execute("INSERT INTO ambulances(vehicle_no, driver, phone, status) VALUES (?,?,?,?)", (vehicle_no, driver, phone, status))
     conn.commit()
-    conn.close()
 
     flash("New ambulance added successfully ✅", "success")
     return redirect("/manage_ambulances")
@@ -1140,7 +1231,43 @@ def symptoms():
 
         result = symptom_model.predict([values])[0]
 
-        return render_template("result.html", result=result)
+        # Enhance prediction with detailed insights
+        care_plan = {
+            "severity": result,
+            "color": "success" if result == "Mild" else "warning" if result == "Moderate" else "danger",
+            "icon": "leaf" if result == "Mild" else "exclamation-triangle" if result == "Moderate" else "biohazard",
+            "priority": "Standard Care" if result == "Mild" else "Enhanced Monitoring" if result == "Moderate" else "Immediate Intervention",
+            "recommendations": [],
+            "stats": {
+                "Pain": values[0],
+                "Fatigue": values[1],
+                "Nausea": values[2],
+                "Depression": values[3],
+                "Appetite": values[4]
+            }
+        }
+
+        if values[0] >= 4: care_plan["recommendations"].append("Administer prescribed analgesics and explore non-pharmacological comfort measures.")
+        if values[1] >= 4: care_plan["recommendations"].append("Prioritize rest cycles and minimize non-essential physical exertion.")
+        if values[2] >= 3: care_plan["recommendations"].append("Monitor hydration levels and consider anti-emetic medications.")
+        if values[3] >= 3: care_plan["recommendations"].append("Schedule emotional support or spiritual care consultation.")
+        if values[4] >= 4: care_plan["recommendations"].append("Offer small, nutrient-dense meals; consider nutritional supplements.")
+
+        # Logic-based additions for Severity levels
+        if result == "Moderate":
+            care_plan["recommendations"].insert(0, "Schedule a consultation with the assigned nurse within the next 24 hours.")
+            care_plan["recommendations"].append("Log vitals 3-4 times daily to track progression.")
+        elif result == "Severe":
+            care_plan["recommendations"].insert(0, "IMMEDIATE ACTION: This condition requires urgent medical review. Contact your doctor or nurse now.")
+            care_plan["recommendations"].append("Consider triggering the emergency SOS if the patient is unstable.")
+            care_plan["recommendations"].append("Ensure all prescribed emergency medications are within immediate reach.")
+            care_plan["recommendations"].append("Maintain constant, close-proximity supervision of the patient.")
+
+        if not care_plan["recommendations"]:
+            care_plan["recommendations"].append("✅ Continue routine daily monitoring.")
+            care_plan["recommendations"].append("🛌 Maintain current comfort protocols and environment.")
+
+        return render_template("result.html", care_plan=care_plan)
 
     return render_template("symptoms.html")
 

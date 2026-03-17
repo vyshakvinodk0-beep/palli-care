@@ -27,16 +27,24 @@
                         <th class="py-3">Item Name</th>
                         <th class="py-3">Caregiver</th>
                         <th class="py-3">Borrowed On</th>
+                        <th class="py-3">Return Date</th>
                         <th class="py-3">Status</th>
+                        <th class="py-3">Reminder / Notes</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for booking in bookings %}
-                    <tr class="border-secondary border-opacity-10">
+                    {% set is_overdue = false %}
+                    {% if booking.return_date and today_date %}
+                        {% if (booking.return_date | string) < (today_date | string) and booking.status == 'In Use' %}
+                            {% set is_overdue = true %}
+                        {% endif %}
+                    {% endif %}
+                    <tr class="border-secondary border-opacity-10 {% if is_overdue %}bg-danger bg-opacity-10{% endif %}">
                         <td class="py-4">
                             <div class="d-flex align-items-center">
                                 <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
-                                    <i class="fas fa-wheelchair text-primary"></i>
+                                    <i class="fas fa-box text-primary"></i>
                                 </div>
                                 <span class="fw-bold">{{ booking.item_name }}</span>
                             </div>
@@ -47,15 +55,33 @@
                             </span>
                         </td>
                         <td class="py-4 opacity-75 small">{{ booking.booking_date }}</td>
+                        <td class="py-4 font-monospace">
+                            {{ booking.return_date or 'N/A' }}
+                            {% if is_overdue %}
+                            <div class="text-danger fw-bold small"><i class="fas fa-exclamation-triangle"></i> OVERDUE</div>
+                            {% endif %}
+                        </td>
                         <td class="py-4">
                             {% if booking.status == 'In Use' %}
                             <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
                                 <i class="fas fa-clock me-1"></i> In Use
                             </span>
+                            {% elif booking.status == 'Pending' %}
+                            <span class="badge bg-info px-3 py-2 rounded-pill">Pending</span>
                             {% else %}
                             <span class="badge bg-success px-3 py-2 rounded-pill">
                                 <i class="fas fa-check-circle me-1"></i> Returned
                             </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4">
+                            {% if booking.status in ['In Use', 'Pending'] %}
+                            <form action="/admin_item_message/{{ booking.id }}" method="POST" class="d-flex gap-2">
+                                <input type="text" name="message" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Type reminder..." value="{{ booking.admin_notes or '' }}">
+                                <button type="submit" class="btn btn-sm btn-primary">Send</button>
+                            </form>
+                            {% else %}
+                            <span class="opacity-50 small">{{ booking.admin_notes or 'N/A' }}</span>
                             {% endif %}
                         </td>
                     </tr>
